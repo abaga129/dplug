@@ -285,20 +285,20 @@ nothrow:
 
 private:
 
-    IWindowListener listener;
-    Window _windowId, _parentWindowId;
-    bool _terminated = false;
-    Atom _closeAtom;
+    __gshared IWindowListener listener;
+    __gshared Window _windowId, _parentWindowId;
+    __gshared bool _terminated = false;
+    __gshared Atom _closeAtom;
 
-    ImageRef!RGBA _wfb; // framebuffer reference
+    __gshared ImageRef!RGBA _wfb; // framebuffer reference
 
-    derelict.x11.Xlib.GC _graphicGC;
-    XImage* _graphicImage;
-    ubyte[4][] _bufferData;
-    int width, height, depth;
+    __gshared derelict.x11.Xlib.GC _graphicGC;
+    __gshared XImage* _graphicImage;
+    __gshared ubyte[4][] _bufferData;
+    __gshared int width, height, depth;
 
-    uint lastTimeGot, creationTime, currentTime;
-    int lastMouseX, lastMouseY;
+    __gshared uint lastTimeGot, creationTime, currentTime;
+    __gshared int lastMouseX, lastMouseY;
 
     Thread _eventLoop;
 }
