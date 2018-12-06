@@ -26,4 +26,5 @@ builds
 repro*.sh
 *.sh
 !tests/lv2-plugin/install.sh
+!tests/lv2-plugin/install-clipit.sh
 .vscode

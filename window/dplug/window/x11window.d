@@ -43,6 +43,7 @@ import derelict.x11.keysymdef;
 import derelict.x11.Xutil;
 import derelict.x11.extensions.Xrandr;
 import derelict.x11.extensions.randr;
+import core.stdc.stdio;
 
 // This is an extension to X11, almost always should exist on modern systems
 // If it becomes a problem, version out its usage, it'll work just won't be as nice event wise
@@ -85,6 +86,7 @@ private:
 public:
     this(void* parentWindow, IWindowListener listener, int width, int height)
     {
+        fprintf(stderr, "X11Window: constructor\n");
         drawMutex = makeMutex();
 
         initializeXLib();
@@ -151,6 +153,7 @@ public:
 
         _eventLoop = makeThread(&eventLoop);
         _eventLoop.start();
+        fprintf(stderr, "X11Window: constructor completed\n");
     }
 
     ~this()
@@ -249,6 +252,7 @@ public:
 
     void eventLoop() nothrow @nogc
     {
+        fprintf(stderr, "X11Window: eventLoop()");
         while (!terminated()) {
             waitEventAndDispatch();
         }

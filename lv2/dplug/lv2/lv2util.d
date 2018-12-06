@@ -1,5 +1,6 @@
 /*
   Copyright 2016 David Robillard <http://drobilla.net>
+  Copyright 2018 Ethan Reker <http://cutthroughrecordings.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -13,14 +14,8 @@
   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
-/**
-* lv2core/lv2_util.h translation to D
-* Copyright: Cut Through Recordings 2018.
-* Copyright: Copyright Auburn Sounds 2018.
-* License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
-* Authors:   Ethan Reker
-*/
 module dplug.lv2.lv2util;
+
 /**
    @defgroup util Utilities
    @ingroup lv2core
@@ -40,7 +35,6 @@ extern(C) {
     only useful for features with data, and can not detect features that are
     present but have NULL data.
     */
-    pragma(inline):
     static void*
     lv2_features_data(const (LV2_Feature*)* features,
                     const char*        uri)
@@ -77,7 +71,6 @@ extern(C) {
 
     @return NULL on success, otherwise the URI of this missing feature.
     */
-    pragma(inline):
     static const (char*)
     lv2_features_query(const (LV2_Feature*)* features, ...)
     {

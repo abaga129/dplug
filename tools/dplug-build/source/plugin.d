@@ -699,6 +699,36 @@ string makePListFile(Plugin plugin, string config, bool hasIcon)
     return content;
 }
 
+string makeManifestFile(Plugin plugin)
+{
+    string baseURI = plugin.vendorUniqueID ~ ":" ~ plugin.pluginUniqueID;
+
+    string content = "";
+    content ~= "@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .\n";
+    content ~= "@prefix atom: <http://lv2plug.in/ns/ext/atom#> .\n";
+    content ~= "@prefix doap: <http://usefulinc.com/ns/doap#> .\n";
+    content ~= "@prefix midi: <http://lv2plug.in/ns/ext/midi#> .\n";
+    content ~= "@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n";
+    content ~= "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n";
+    content ~= "@prefix urid: <http://lv2plug.in/ns/ext/urid#> .\n";
+    content ~= "@prefix units: <http://lv2plug.in/ns/extensions/units#> .\n";
+    content ~= "@prefix ui:    <http://lv2plug.in/ns/extensions/ui#>.\n\n";
+    content ~= "<" ~ baseURI ~ ">\n";
+    content ~= "    a lv2:Plugin ;\n";
+    content ~= "    lv2:binary <" ~ plugin.dubOutputFileName ~ "> ;\n\n";
+    content ~= "    doap:license <" ~ plugin.licensePath ~ "> ;\n";
+    if(plugin.hasGUI)
+    {
+        content ~= "    ui:ui <" ~ baseURI ~ "#ui>;\n";
+    }
+    
+    // describe UI
+    if(plugin.hasGUI)
+    {
+        content ~= "<" ~ baseURI ~ "#ui>\n";
+    }
+    return content;
+}
 
 // return path of newly made icon
 string makeMacIcon(string pluginName, string pngPath)

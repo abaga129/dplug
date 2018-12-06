@@ -4,7 +4,7 @@
     "vendorName": "Witty Audio",
     "vendorUniqueID": "Wity",
     "pluginName": "CLIP It",
-    "pluginUniqueID": "WiDi",
+    "pluginUniqueID": "ClPi",
     "publicVersion": "1.0.0",
     "CFBundleIdentifierPrefix": "com.wittyaudio",
     "hasGUI": true,

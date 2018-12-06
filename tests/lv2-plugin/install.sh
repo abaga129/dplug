@@ -1,5 +1,5 @@
 #!/bin/bash
-dub --root=../../examples/distort -c LV2
+dub --root=../../examples/distort -c LV2 --combined
 sudo rm -rf /usr/lib/lv2/lv2example.lv2
 sudo mkdir /usr/lib/lv2/lv2example.lv2
 sudo cp ../../examples/distort/libdistort.so /usr/lib/lv2/lv2example.lv2/libdistort.so
