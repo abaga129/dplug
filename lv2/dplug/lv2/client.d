@@ -144,6 +144,10 @@ nothrow:
         {
             _outputs[port - _client.params.length - _maxInputs] = cast(float*)data;
         }
+        else if(port < _maxOutputs + _maxInputs + _client.params.length + 1)
+        {
+            _midiInput = cast(LV2_Atom_Sequence*)data;    
+        }
         else
             assert(false, "Error unknown port index");
     }
@@ -241,7 +245,7 @@ private:
     float** _params;
     float*[] _inputs;
     float*[] _outputs;
-    LV2_Atom_Sequence* control;
+    LV2_Atom_Sequence* _midiInput;
 
     float _sampleRate;
 
