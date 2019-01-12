@@ -165,6 +165,36 @@ nothrow:
             _callResetOnNextRun = false;
             _client.resetFromHost(_sampleRate, _maxBufferSize, _maxInputs, _maxOutputs);
         }
+
+        uint32_t  offset = 0;
+
+        // LV2_ATOM_SEQUENCE_FOREACH Macro from atom.util. Only used once so no need to write a template for it.
+        for(LV2_Atom_Event* ev = assumeNothrowNoGC(&lv2_atom_sequence_begin)(&(_midiInput.body)); 
+            !assumeNothrowNoGC(&lv2_atom_sequence_is_end)(&(this._midiInput).body, this._midiInput.atom.size, ev); 
+            ev = assumeNothrowNoGC(&lv2_atom_sequence_next)(ev))
+        {
+            if (ev.body.type == _midiEvent) {
+                const (uint8_t)* msg = cast(const (uint8_t)*)(ev + 1);
+                switch (assumeNothrowNoGC(&lv2_midi_message_type)(msg)) {
+                case LV2_MIDI_MSG_NOTE_ON:
+                    // ++n_active_notes;
+                    break;
+                case LV2_MIDI_MSG_NOTE_OFF:
+                    // --n_active_notes;
+                    break;
+                default: break;
+                }
+            }
+
+            if (ev.body.type == _atomBlank || ev.body.type == _atomObject)
+            {
+                LV2_Atom* frame = nullptr;
+            }           
+
+        //     write_output(self, offset, ev.time.frames - offset);
+            // offset = cast(uint32_t)(ev.time.frames);
+        }
+
         _client.processAudioFromHost(_inputs, _outputs, n_samples, timeInfo);
     }
 
@@ -248,6 +278,10 @@ private:
     LV2_Atom_Sequence* _midiInput;
 
     float _sampleRate;
+    
+    LV2_URID _midiEvent;
+    LV2_URID _atomBlank;
+    LV2_URID _atomObject;
 
     UncheckedMutex _graphicsMutex;
 }
