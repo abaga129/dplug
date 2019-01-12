@@ -5,15 +5,25 @@ Copyright: Elias Batek 2018.
 License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
 */
 import std.math;
-import dplug.core, dplug.client, dplug.vst;
+import dplug.core, dplug.client;
 import synthesis;
 
 // This creates the DLL entry point
 mixin(DLLEntryPoint!());
 
-// This creates the VST entry point
-mixin(VSTEntryPoint!PolyAlias);
+version(VST)
+{
+    // This creates the VST entry point
+    import dplug.vst;
+    mixin(VSTEntryPoint!PolyAlias);
+}
 
+version(LV2)
+{
+    // This creates the LV2 entry point
+    import dplug.lv2;
+    mixin(LV2EntryPoint!PolyAlias);
+}
 private
 {
     // Number of max notes playing at the same time
