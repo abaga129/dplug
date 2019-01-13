@@ -174,6 +174,7 @@ nothrow:
             ev = assumeNothrowNoGC(&lv2_atom_sequence_next)(ev))
         {
             if (ev.body.type == _midiEvent) {
+                MidiMessage message;
                 const (uint8_t)* msg = cast(const (uint8_t)*)(ev + 1);
                 switch (assumeNothrowNoGC(&lv2_midi_message_type)(msg)) {
                 case LV2_MIDI_MSG_NOTE_ON:
@@ -184,11 +185,12 @@ nothrow:
                     break;
                 default: break;
                 }
+                _client.enqueueMIDIFromHost(message);
             }
 
             if (ev.body.type == _atomBlank || ev.body.type == _atomObject)
             {
-                LV2_Atom* frame = nullptr;
+                LV2_Atom* frame = null;
             }           
 
         //     write_output(self, offset, ev.time.frames - offset);
