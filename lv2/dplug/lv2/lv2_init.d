@@ -136,9 +136,9 @@ nothrow @nogc const(char)* pluginURIFromClient(alias ClientClass)(int index)
 
 void buildUIDescriptor(const(char)[] baseURI) nothrow @nogc
 {
-    char[] uiURI = mallocSlice!char(baseURI.length + 3);
+    char[] uiURI = mallocSlice!char(baseURI.length + 4);
     uiURI[0..baseURI.length] = baseURI;
-    uiURI[baseURI.length..$] = "#ui";
+    uiURI[baseURI.length..$] = "#ui\0";
     fprintf(stderr, "UI URI: %s", uiURI.ptr);
     LV2UI_Descriptor descriptor = {
         URI: uiURI.ptr, 
