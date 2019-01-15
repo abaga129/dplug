@@ -77,7 +77,6 @@ nothrow:
 
     void instantiate(const LV2_Descriptor* descriptor, double rate, const char* bundle_path, const(LV2_Feature*)* features)
     {
-        LV2_Options_Option* options = null;
         LV2_URID_Map* uridMap = null;
         for(int i = 0; features[i] != null; ++i)
         {
@@ -213,6 +212,31 @@ nothrow:
                        LV2UI_Widget*                   widget,
                        const (LV2_Feature*)*       features)
     {
+        for (int i=0; options[i].key != 0; ++i)
+        {
+            if (options[i].key == LV2UI_Parent)
+            {
+                if (options[i].type == uridMap.map(uridMap.handle, LV2_ATOM__Long))
+                {
+                    if (const int64_t transientWinId = *cast(const int64_t*)options[i].value)
+                        void* parentWindow = cast(void*)(transientWinId);
+                }
+                
+            }
+            // else if (options[i].key == uridWindowTitle)
+            // {
+            //     if (options[i].type == uridMap->map(uridMap->handle, LV2_ATOM__String))
+            //     {
+            //         if (const char* const windowTitle = (const char*)options[i].value)
+            //         {
+            //             hasTitle = true;
+            //             fUI.setWindowTitle(windowTitle);
+            //         }
+            //     }
+            //     else
+            //         d_stderr("Host provides windowTitle but has wrong value type");
+            // }
+        }
         if (widget != null)
         {
             _graphicsMutex.lock();
@@ -284,6 +308,7 @@ private:
     LV2_URID _midiEvent;
     LV2_URID _atomBlank;
     LV2_URID _atomObject;
+    LV2_Options_Option* options;
 
     UncheckedMutex _graphicsMutex;
 }
