@@ -230,7 +230,6 @@ nothrow:
             _graphicsMutex.lock();
             *widget = cast(LV2UI_Widget)_client.openGUI(parentId, null, GraphicsBackend.autodetect);
             _client.getGUISize(&width, &height);
-            
             _graphicsMutex.unlock();
             assumeNothrowNoGC(uiResize.ui_resize)(uiResize.handle, width, height);
         }
