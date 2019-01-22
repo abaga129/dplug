@@ -229,6 +229,16 @@ nothrow:
         LV2_URID uridWindowTitle = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle);
         LV2_URID uridTransientWinId = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_KXSTUDIO_PROPERTIES__TransientWindowId);
 
+        for (int i=0; _options[i].key != 0; ++i)
+        {
+            if (_options[i].key == uridTransientWinId)
+            {
+                if (const int64_t transientWinId = *cast(const int64_t*)_options[i].value)
+                    parentId = cast(void*)transientWinId;
+            }
+        }
+
+
         if (widget != null)
         {
             void* pluginWindow;
