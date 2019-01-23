@@ -216,6 +216,7 @@ nothrow:
     {
         void* parentId = null;
         LV2UI_Resize* uiResize = null;
+        void* transientWin = null;
         int width, height;
 
         for (int i=0; features[i] != null; ++i)
@@ -224,6 +225,8 @@ nothrow:
                 parentId = cast(void*)features[i].data;
             if (strcmp(features[i].URI, LV2_UI__resize) == 0)
                 uiResize = cast(LV2UI_Resize*)features[i].data;
+            if (strcmp(features[i].URI, LV2_OPTIONS__options) == 0)
+                _options = cast(LV2_Options_Option*)features[i].data;
         }
 
         LV2_URID uridWindowTitle = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle);
@@ -234,7 +237,7 @@ nothrow:
             if (_options[i].key == uridTransientWinId)
             {
                 if (const int64_t transientWinId = *cast(const int64_t*)_options[i].value)
-                    parentId = cast(void*)transientWinId;
+                    transientWin = cast(void*)transientWinId;
             }
         }
 
@@ -243,11 +246,11 @@ nothrow:
         {
             void* pluginWindow;
             _graphicsMutex.lock();
-            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, null, GraphicsBackend.autodetect);
+            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, transientWin, GraphicsBackend.autodetect);
             _client.getGUISize(&width, &height);
             _graphicsMutex.unlock();
-            assumeNothrowNoGC(uiResize.ui_resize)(uiResize.handle, width, height);
 
+            assumeNothrowNoGC(uiResize.ui_resize)(uiResize.handle, width, height);
             *widget = pluginWindow;
         }
     }
