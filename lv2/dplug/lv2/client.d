@@ -216,6 +216,7 @@ nothrow:
     {
         void* parentId = null;
         LV2UI_Resize* uiResize = null;
+        char* windowTitle = null;
         void* transientWin = null;
         int width, height;
 
@@ -234,10 +235,13 @@ nothrow:
 
         for (int i=0; _options[i].key != 0; ++i)
         {
-            if (_options[i].key == uridTransientWinId)
+            if (_options[i].key == assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle))
             {
-                if (const int64_t transientWinId = *cast(const int64_t*)_options[i].value)
-                    transientWin = cast(void*)transientWinId;
+                windowTitle = cast(char*)_options[i].value;   
+            }
+            else if (_options[i].key == assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_KXSTUDIO_PROPERTIES__TransientWindowId))
+            {
+                transientWin = cast(void*)_options[i].value;   
             }
         }
 
@@ -246,7 +250,7 @@ nothrow:
         {
             void* pluginWindow;
             _graphicsMutex.lock();
-            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, transientWin, GraphicsBackend.autodetect);
+            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, windowTitle, GraphicsBackend.autodetect);
             _client.getGUISize(&width, &height);
             _graphicsMutex.unlock();
 

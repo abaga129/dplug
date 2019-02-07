@@ -118,7 +118,7 @@ public:
         depth = 24;
 
         _windowId = XCreateSimpleWindow(_display, _parentWindowId, x, y, width, height, 0, 0, _black_pixel);
-        XStoreName(_display, _windowId, cast(char*)" ".ptr);
+        XStoreName(_display, _windowId, cast(char*)transientWindowId);
 
         XSizeHints sizeHints;
         sizeHints.flags = PMinSize | PMaxSize;
