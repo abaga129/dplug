@@ -76,6 +76,7 @@ nothrow:
         _uriMap = uriMapPtr;
         _options = null;
         _uridMap = null;
+        LV2_External_UI_Widget widget = {&runExternalUI, &showExternalUI, &hideExternalUI};
     }
 
     void instantiate(const LV2_Descriptor* descriptor, double rate, const char* bundle_path, const(LV2_Feature*)* features)
@@ -216,8 +217,9 @@ nothrow:
     {
         void* parentId = null;
         LV2UI_Resize* uiResize = null;
+        char* windowTitle;
         int width, height;
-        LV2_External_UI_Widget* externalUIWidget;
+        LV2_External_UI_Host* host;
 
         for (int i=0; features[i] != null; ++i)
         {
@@ -225,36 +227,48 @@ nothrow:
                 parentId = cast(void*)features[i].data;
             if (strcmp(features[i].URI, LV2_UI__resize) == 0)
                 uiResize = cast(LV2UI_Resize*)features[i].data;
+            if (strcmp(features[i].URI, LV2_EXTERNAL_UI__Host) == 0 ||
+                strcmp(features[i].URI, LV2_EXTERNAL_UI_DEPRECATED_URI) == 0)
+            {
+                host = cast(LV2_External_UI_Host*)features[i].data;
+                break;
+            }
+        }
+        if(host != null) 
+        {
+            *widget = cast(LV2_External_UI_Widget*)_externalUIWidget;
+            return;
         }
 
-        LV2_URID uridWindowTitle = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle);
+        // LV2_URID uridWindowTitle = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle);
         // LV2_URID uridTransientWinId = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_KXSTUDIO_PROPERTIES__TransientWindowId);
-        LV2_URID uridExternalUIWidget = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_EXTERNAL_UI__Widget);
+        // LV2_URID uridExternalUIWidget = assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_EXTERNAL_UI__Widget);
 
         for (int i=0; _options[i].key != 0; ++i)
         {
+            if (_options[i].key != assumeNothrowNoGC(_uridMap.map)(_uridMap.handle, LV2_UI__windowTitle))
+                windowTitle = cast(char*)_options[i].value;
             // if (_options[i].key == uridTransientWinId)
             // {
             //     if (const int64_t transientWinId = *cast(const int64_t*)_options[i].value)
             //         parentId = cast(void*)transientWinId;
             // }
-            if(_options[i].key == uridExternalUIWidget) 
-            {
-                externalUIWidget = cast(LV2_External_UI_Widget*)_options[i].value;
-            }
+            // if(_options[i].key == uridExternalUIWidget) 
+            // {
+            //     externalUIWidget = cast(LV2_External_UI_Widget*)_options[i].value;
+            // }
         }
-
 
         if (widget != null)
         {
             void* pluginWindow;
             _graphicsMutex.lock();
-            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, null, GraphicsBackend.autodetect);
+            pluginWindow = cast(LV2UI_Widget)_client.openGUI(parentId, windowTitle, GraphicsBackend.autodetect);
             _client.getGUISize(&width, &height);
             _graphicsMutex.unlock();
             assumeNothrowNoGC(uiResize.ui_resize)(uiResize.handle, width, height);
 
-            *externalUIWidget = pluginWindow;
+            *widget = pluginWindow;
         }
     }
 
@@ -301,6 +315,24 @@ nothrow:
         return DAW.Unknown;
     }
 
+    /**
+     *External UI methods
+     */
+    // void run(_LV2_External_UI_Widget * _this_) 
+    // {
+    //     printf("test");
+    // }
+
+    // void show(_LV2_External_UI_Widget * _this_) 
+    // {
+    //     printf("test");
+    // }
+
+    // void hide(_LV2_External_UI_Widget * _this_) 
+    // {
+    //     printf("test");
+    // }
+
 private:
 
     uint _maxInputs;
@@ -322,5 +354,25 @@ private:
     LV2_Options_Option* _options;
     LV2_URID_Map* _uridMap;
 
+    LV2_External_UI_Widget* _externalUIWidget;
+
     UncheckedMutex _graphicsMutex;
+}
+
+extern(C) 
+{
+    void runExternalUI(_LV2_External_UI_Widget * _this_) 
+    {
+        printf("test");
+    }
+
+    void showExternalUI(_LV2_External_UI_Widget * _this_) 
+    {
+        printf("test");
+    }
+
+    void hideExternalUI(_LV2_External_UI_Widget * _this_) 
+    {
+        printf("test");
+    }
 }
