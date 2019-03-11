@@ -359,7 +359,7 @@ nothrow:
     {
         debug(debugLV2Client) debugLog(">instantiateUI");
 
-        void* transientWin = null;
+        int transientWinId;
         void* parentId = null;
         LV2_Options_Option* options = null;
         LV2UI_Resize* uiResize = null;
@@ -382,6 +382,18 @@ nothrow:
                 uridMap = cast(LV2_URID_Map*)features[i].data;
             else if (strcmp(features[i].URI, LV2_UI__touch) == 0)
                 _uiTouch = cast(LV2UI_Touch*)features[i].data;
+        }
+        
+        if(uridMap !is null && options !is null)
+        {
+            LV2_URID uridTransientWinId = assumeNothrowNoGC(uridMap.map)(uridMap.handle, LV2_KXSTUDIO_PROPERTIES__TransientWindowId);
+            for(int i = 0; options[i].key != 0; ++i)
+            {
+                if(options[i].key == uridTransientWinId)
+                {
+                    transientWinId = *(cast(const int*)options[i].value);
+                }
+            }
         }
 
         // Not transmitted yet
