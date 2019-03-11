@@ -143,6 +143,7 @@ public:
         if (parentWindow) {
             // Embed the window in parent (most VST hosts expose some area for embedding a VST client)
             XReparentWindow(_display, _windowId, _parentWindowId, 0, 0);
+            XSetTransientForHint(_display, _windowId, _parentWindowId);
         }
 
         /*if(transientWindowId)
@@ -219,44 +220,6 @@ public:
             }
 
             _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_bufferData.ptr, width, height, 32, 0);
-
-            // PERF: there is no reason to do reordering here, since pixels can be requested to be BGRA8 in the onDraw call
-            size_t i;
-            foreach(y; 0 .. wfb.h)
-            {
-                RGBA[] scanLine = wfb.scanline(y);
-                foreach(x, ref c; scanLine)
-                {
-                    _bufferData[i][0] = c.b;
-                    _bufferData[i][1] = c.g;
-                    _bufferData[i][2] = c.r;
-                    _bufferData[i][3] = c.a;
-                    i++;
-                }
-            }
-        }
-        else
-        {
-            // PERF: there is no reason to do reordering here, since pixels can be requested to be BGRA8 in the onDraw call
-            foreach(box2i area; areasToRedraw)
-            {
-                foreach(y; area.min.y .. area.max.y)
-                {
-                    RGBA[] scanLine = wfb.scanline(y);
-
-                    size_t i = y * wfb.w;
-                    i += area.min.x;
-
-                    foreach(x, ref c; scanLine[area.min.x .. area.max.x])
-                    {
-                        _bufferData[i][0] = c.b;
-                        _bufferData[i][1] = c.g;
-                        _bufferData[i][2] = c.r;
-                        _bufferData[i][3] = c.a;
-                        i++;
-                    }
-                }
-            }
         }
 
         XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)width, cast(uint)height);
@@ -395,7 +358,7 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                 
 
                 if (!areaToRedraw.empty()) {
-                    listener.onDraw(WindowPixelFormat.RGBA8);
+                    listener.onDraw(WindowPixelFormat.BGRA8);
                     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
                     swapBuffers(_wfb, areasToRedraw);
                 }
