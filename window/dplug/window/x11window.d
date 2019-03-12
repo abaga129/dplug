@@ -221,7 +221,7 @@ public:
 
             _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_bufferData.ptr, width, height, 32, 0);
         }
-
+        listener.onDraw(WindowPixelFormat.BGRA8);
         XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)width, cast(uint)height);
     }
 
