@@ -70,17 +70,23 @@ private:
     Atom _closeAtom;
     derelict.x11.Xlib.GC _graphicGC;
     XImage* _graphicImage;
-    int width, height, depth;
+    int depth;
     // Threads
     Thread _eventLoop, _timerLoop;
     UncheckedMutex drawMutex;
     //Other
-    IWindowListener listener;
+    IWindowListener _listener;
 
     ImageRef!RGBA _wfb; // framebuffer reference
-    ubyte[4][] _bufferData;
+    
+    uint _timeAtCreationInMs;
+    uint _lastMeasturedTimeInMs;
+    bool _dirtyAreasAreNotYetComputed;
 
-    uint lastTimeGot, creationTime, currentTime;
+    int _width;
+    int _height;
+
+    uint currentTime;
     int lastMouseX, lastMouseY;
 
     box2i prevMergedDirtyRect, mergedDirtyRect;
@@ -93,14 +99,14 @@ private:
     enum int XEMBED_MAPPED = (1 << 0);
 
 public:
-    this(void* parentWindow, /* void* transientWindowId,*/ IWindowListener listener, int width, int height)
+    this(void* parentWindow, /* void* transientWindowId,*/ IWindowListener listener, int _width, int _height)
     {
         debug(logX11Window) fprintf(stderr, "X11Window: constructor\n");
         drawMutex = makeMutex();
         initializeXLib();
 
         int x, y;
-        this.listener = listener;
+        _listener = listener;
 
         if (parentWindow is null)
         {
@@ -111,21 +117,21 @@ public:
             _parentWindowId = cast(Window)parentWindow;
         }
 
-        x = (DisplayWidth(_display, _screen) - width) / 2;
-        y = (DisplayHeight(_display, _screen) - height) / 3;
-        this.width = width;
-        this.height = height;
+        x = (DisplayWidth(_display, _screen) - _width) / 2;
+        y = (DisplayHeight(_display, _screen) - _height) / 3;
+        this._width = _width;
+        this._height = _height;
         depth = 24;
 
-        _windowId = XCreateSimpleWindow(_display, _parentWindowId, x, y, width, height, 0, 0, _black_pixel);
+        _windowId = XCreateSimpleWindow(_display, _parentWindowId, x, y, _width, _height, 0, 0, _black_pixel);
         //XStoreName(_display, _windowId, cast(char*)transientWindowId);
 
         XSizeHints sizeHints;
         sizeHints.flags = PMinSize | PMaxSize;
-        sizeHints.min_width = width;
-        sizeHints.max_width = width;
-        sizeHints.min_height = height;
-        sizeHints.max_height = height;
+        sizeHints.min_width = _width;
+        sizeHints.max_width = _width;
+        sizeHints.min_height = _height;
+        sizeHints.max_height = _height;
 
         XSetWMNormalHints(_display, _windowId, &sizeHints);
 
@@ -146,11 +152,6 @@ public:
             XSetTransientForHint(_display, _windowId, _parentWindowId);
         }
 
-        /*if(transientWindowId)
-        {
-            XSetTransientForHint(_display, _windowId, cast(Window)transientWindowId);
-        }*/
-
         XMapWindow(_display, _windowId);
         XFlush(_display);
 
@@ -159,10 +160,12 @@ public:
         XSetBackground(_display, _graphicGC, _white_pixel);
         XSetForeground(_display, _graphicGC, _black_pixel);
 
-        _wfb = listener.onResized(width, height);
+        _wfb = _listener.onResized(_width, _height);
 
-        creationTime = getTimeMs();
-        lastTimeGot = creationTime;
+        _timeAtCreationInMs = getTimeMs();
+        _lastMeasturedTimeInMs = _timeAtCreationInMs;
+
+        _dirtyAreasAreNotYetComputed = true;
 
         emptyMergedBoxes();
 
@@ -175,7 +178,8 @@ public:
     }
 
     ~this()
-    {
+    { 
+        _terminated = true;
         XDestroyWindow(_display, _windowId);
         XFlush(_display);
         _timerLoop.join();
@@ -207,24 +211,6 @@ public:
             KeyReleaseMask | KeyPressMask | ButtonReleaseMask | ButtonPressMask | PointerMotionMask;
     }
 
-    void swapBuffers(ImageRef!RGBA wfb, box2i[] areasToRedraw)
-    {
-        if (_bufferData.length != wfb.w * wfb.h)
-        {
-            _bufferData = mallocSlice!(ubyte[4])(wfb.w * wfb.h);
-
-            if (_graphicImage !is null)
-            {
-                // X11 deallocates _bufferData for us (ugh...)
-                XDestroyImage(_graphicImage);
-            }
-
-            _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_bufferData.ptr, width, height, 32, 0);
-        }
-        listener.onDraw(WindowPixelFormat.BGRA8);
-        XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)width, cast(uint)height);
-    }
-
     // Implements IWindow
     override void waitEventAndDispatch() nothrow @nogc
     {
@@ -251,8 +237,8 @@ public:
 
     void sendRepaintIfUIDirty() nothrow @nogc
     {
-        listener.recomputeDirtyAreas();
-        box2i dirtyRect = listener.getDirtyRectangle();
+        _listener.recomputeDirtyAreas();
+        box2i dirtyRect = _listener.getDirtyRectangle();
         if (!dirtyRect.empty())
         {
             prevMergedDirtyRect = mergedDirtyRect;
@@ -262,8 +248,8 @@ public:
             if (prevMergedDirtyRect.empty() && !mergedDirtyRect.empty()) {
                 int x = dirtyRect.min.x;
                 int y = dirtyRect.min.y;
-                int width = dirtyRect.max.x - x;
-                int height = dirtyRect.max.y - y;
+                int _width = dirtyRect.max.x - x;
+                int _height = dirtyRect.max.y - y;
 
                 XEvent evt;
                 memset(&evt, 0, XEvent.sizeof);
@@ -287,12 +273,12 @@ public:
         while(!terminated())
         {
             currentTime = getTimeMs();
-            float diff = currentTime - lastTimeGot;
-            double dt = (currentTime - lastTimeGot) * 0.001;
-            double time = (currentTime - creationTime) * 0.001;
-            listener.onAnimate(dt, time);
+            float diff = currentTime - _lastMeasturedTimeInMs;
+            double dt = (currentTime - _lastMeasturedTimeInMs) * 0.001;
+            double time = (currentTime - _timeAtCreationInMs) * 0.001;
+            _listener.onAnimate(dt, time);
             sendRepaintIfUIDirty();
-            lastTimeGot = currentTime;
+            _lastMeasturedTimeInMs = currentTime;
             //Sleep for ~16.6 milliseconds (60 frames per second rendering)
             usleep(16666);
         }
@@ -335,13 +321,13 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
             case KeyPress:
                 KeySym symbol;
                 XLookupString(&event.xkey, null, 0, &symbol, null);
-                listener.onKeyDown(convertKeyFromX11(symbol));
+                _listener.onKeyDown(convertKeyFromX11(symbol));
                 break;
 
             case KeyRelease:
                 KeySym symbol;
                 XLookupString(&event.xkey, null, 0, &symbol, null);
-                listener.onKeyUp(convertKeyFromX11(symbol));
+                _listener.onKeyUp(convertKeyFromX11(symbol));
                 break;
 
             case MapNotify:
@@ -355,23 +341,23 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 
                 emptyMergedBoxes();
 
-                
-
                 if (!areaToRedraw.empty()) {
-                    listener.onDraw(WindowPixelFormat.BGRA8);
+                    _listener.onDraw(WindowPixelFormat.BGRA8);
                     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
-                    swapBuffers(_wfb, areasToRedraw);
+                    if(_graphicImage is null)
+                        _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                    XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
                 }
                 break;
 
             case ConfigureNotify:
-                if (event.xconfigure.width != width || event.xconfigure.height != height)
+                if (event.xconfigure.width != _width || event.xconfigure.height != _height)
                 {
                     // Handle resize event
-                    width = event.xconfigure.width;
-                    height = event.xconfigure.height;
+                    _width = event.xconfigure.width;
+                    _height = event.xconfigure.height;
 
-                    _wfb = listener.onResized(width, height);
+                    _wfb = _listener.onResized(_width, _height);
                     sendRepaintIfUIDirty();
                 }
                 break;
@@ -382,7 +368,7 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                 int dx = newMouseX - lastMouseX;
                 int dy = newMouseY - lastMouseY;
 
-                listener.onMouseMove(newMouseX, newMouseY, dx, dy, mouseStateFromX11(event.xbutton.state));
+                _listener.onMouseMove(newMouseX, newMouseY, dx, dy, mouseStateFromX11(event.xbutton.state));
 
                 lastMouseX = newMouseX;
                 lastMouseY = newMouseY;
@@ -412,12 +398,12 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 
                 if (event.xbutton.button == Button4 || event.xbutton.button == Button5)
                 {
-                    listener.onMouseWheel(newMouseX, newMouseY, 0, event.xbutton.button == Button4 ? 1 : -1,
+                    _listener.onMouseWheel(newMouseX, newMouseY, 0, event.xbutton.button == Button4 ? 1 : -1,
                         mouseStateFromX11(event.xbutton.state));
                 }
                 else
                 {
-                    listener.onMouseClick(newMouseX, newMouseY, button, isDoubleClick, mouseStateFromX11(event.xbutton.state));
+                    _listener.onMouseClick(newMouseX, newMouseY, button, isDoubleClick, mouseStateFromX11(event.xbutton.state));
                 }
                 break;
 
@@ -439,7 +425,7 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                 else if (event.xbutton.button == Button4 || event.xbutton.button == Button5)
                     break;
 
-                listener.onMouseRelease(newMouseX, newMouseY, button, mouseStateFromX11(event.xbutton.state));
+                _listener.onMouseRelease(newMouseX, newMouseY, button, mouseStateFromX11(event.xbutton.state));
                 break;
 
             case DestroyNotify:
