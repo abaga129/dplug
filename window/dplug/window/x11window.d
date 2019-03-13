@@ -272,13 +272,12 @@ public:
         debug(logX11Window) fprintf(stderr, "X11Window: timerLoop()\n");
         while(!terminated())
         {
-            currentTime = getTimeMs();
-            float diff = currentTime - _lastMeasturedTimeInMs;
-            double dt = (currentTime - _lastMeasturedTimeInMs) * 0.001;
-            double time = (currentTime - _timeAtCreationInMs) * 0.001;
+            uint now = getTimeMs();
+            double dt = (now - _lastMeasturedTimeInMs) * 0.001;
+            double time = (now - _timeAtCreationInMs) * 0.001; // hopefully no plug-in will be open more than 49 days
+            _lastMeasturedTimeInMs = now;
             _listener.onAnimate(dt, time);
             sendRepaintIfUIDirty();
-            _lastMeasturedTimeInMs = currentTime;
             //Sleep for ~16.6 milliseconds (60 frames per second rendering)
             usleep(16666);
         }
@@ -296,8 +295,7 @@ public:
             import core.sys.posix.sys.time;
             timeval  tv;
             gettimeofday(&tv, null);
-            return cast(uint)((tv.tv_sec) * 1000 + (tv.tv_usec) / 1000) ;
-
+            return cast(uint)((tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ) ;
         }
 
         return assumeNothrowNoGC(&perform)();
