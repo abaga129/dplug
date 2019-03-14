@@ -895,8 +895,6 @@ private:
 
     void processReplacing(float **inputs, float **outputs, int sampleFrames) nothrow @nogc
     {
-        static import std.algorithm;
-
         processMessages();
         int hostInputs = _hostIOFromAudioThread.inputs;
         int hostOutputs = _hostIOFromAudioThread.outputs;
@@ -947,8 +945,6 @@ private:
 
     void processDoubleReplacing(double **inputs, double **outputs, int sampleFrames) nothrow @nogc
     {
-        static import std.algorithm;
-        
         processMessages();
         int hostInputs = _hostIOFromAudioThread.inputs;
         int hostOutputs = _hostIOFromAudioThread.outputs;
