@@ -12,5 +12,5 @@ module dplug.vst;
 public
 {
     import dplug.vst.translatesdk;
-    import dplug.vst.client;
+    import dplug.vst.vstclient;
 }

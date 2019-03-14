@@ -20,7 +20,7 @@ VST plug-in client implementation.
 Copyright: Cockos Incorporated 2005-2015.
 Copyright: Guillaume Piolat 2015-2018.
 +/
-module dplug.vst.client;
+module dplug.vst.vstclient;
 
 import std.string;
 
@@ -895,6 +895,8 @@ private:
 
     void processReplacing(float **inputs, float **outputs, int sampleFrames) nothrow @nogc
     {
+        static import std.algorithm;
+
         processMessages();
         int hostInputs = _hostIOFromAudioThread.inputs;
         int hostOutputs = _hostIOFromAudioThread.outputs;
@@ -945,6 +947,8 @@ private:
 
     void processDoubleReplacing(double **inputs, double **outputs, int sampleFrames) nothrow @nogc
     {
+        static import std.algorithm;
+        
         processMessages();
         int hostInputs = _hostIOFromAudioThread.inputs;
         int hostOutputs = _hostIOFromAudioThread.outputs;
