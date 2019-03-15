@@ -160,10 +160,7 @@ public:
         XSetBackground(_display, _graphicGC, _white_pixel);
         XSetForeground(_display, _graphicGC, _black_pixel);
 
-        _wfb = _listener.onResized(_width, _height);
-
-        _timeAtCreationInMs = getTimeMs();
-        _lastMeasturedTimeInMs = _timeAtCreationInMs;
+        _lastMeasturedTimeInMs = _timeAtCreationInMs = getTimeMs();
 
         _dirtyAreasAreNotYetComputed = true;
 
@@ -305,6 +302,25 @@ public:
     {
         return cast(void*)_windowId;
     }
+
+    bool updateSizeIfNeeded(int newWidth, int newHeight)
+    {
+        if ( (newWidth != _width) || (newHeight != _height) )
+        {
+            if(_graphicImage !is null)
+                XDestroyImage(_graphicImage);
+
+            _width = newWidth;
+            _height = newHeight;
+            _wfb = _listener.onResized(_width, _height);
+
+            // Create a new data provider
+            _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
+            return true;
+        }
+        else
+            return false;
+    }
 }
 
 void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
@@ -331,21 +347,33 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
             case MapNotify:
             case Expose:
                 // Resize should trigger Expose event, so we don't need to handle it here
-                
+                updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
 
-                box2i areaToRedraw = mergedDirtyRect;
-                box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
-                areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
-
-                emptyMergedBoxes();
-
-                if (!areaToRedraw.empty()) {
-                    _listener.onDraw(WindowPixelFormat.BGRA8);
-                    box2i[] areasToRedraw = (&areaToRedraw)[0..1];
-                    if(_graphicImage is null)
-                        _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
-                    XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                if(_dirtyAreasAreNotYetComputed)
+                {
+                    _dirtyAreasAreNotYetComputed = false;
+                    _listener.recomputeDirtyAreas();
                 }
+                _listener.recomputeDirtyAreas();
+
+                _listener.onDraw(WindowPixelFormat.BGRA8);
+                XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+
+
+
+                // box2i areaToRedraw = mergedDirtyRect;
+                // box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
+                // areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
+
+                // emptyMergedBoxes();
+
+                // if (!areaToRedraw.empty()) {
+                //     _listener.onDraw(WindowPixelFormat.BGRA8);
+                //     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
+                //     if(_graphicImage is null)
+                //         _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                //     XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                // }
                 break;
 
             case ConfigureNotify:
