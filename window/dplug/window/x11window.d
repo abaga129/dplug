@@ -45,7 +45,7 @@ import derelict.x11.extensions.Xrandr;
 import derelict.x11.extensions.randr;
 import core.stdc.stdio;
 
-// debug = logX11Window;
+debug = logX11Window;
 
 // This is an extension to X11, almost always should exist on modern systems
 // If it becomes a problem, version out its usage, it'll work just won't be as nice event wise
@@ -73,7 +73,7 @@ private:
     int depth;
     // Threads
     Thread _eventLoop, _timerLoop;
-    UncheckedMutex drawMutex;
+    // UncheckedMutex drawMutex;
     //Other
     IWindowListener _listener;
 
@@ -101,9 +101,9 @@ private:
 public:
     this(void* parentWindow, /* void* transientWindowId,*/ IWindowListener listener, int _width, int _height)
     {
-        debug(logX11Window) fprintf(stderr, "X11Window: constructor\n");
-        drawMutex = makeMutex();
+        debug(logX11Window) printf("X11Window: constructor\n");
         initializeXLib();
+        XLockDisplay(_display);
 
         int x, y;
         _listener = listener;
@@ -160,6 +160,8 @@ public:
         XSetBackground(_display, _graphicGC, _white_pixel);
         XSetForeground(_display, _graphicGC, _black_pixel);
 
+        XUnlockDisplay(_display);
+
         _lastMeasturedTimeInMs = _timeAtCreationInMs = getTimeMs();
 
         _dirtyAreasAreNotYetComputed = true;
@@ -177,14 +179,13 @@ public:
     ~this()
     { 
         _terminated = true;
-        XDestroyWindow(_display, _windowId);
-        XFlush(_display);
         _timerLoop.join();
         _eventLoop.join();
+        XDestroyWindow(_display, _windowId);
+        XFlush(_display);
     }
 
     void initializeXLib() {
-        drawMutex.lock();
         if (!XLibInitialized) {
             XInitThreads();
 
@@ -200,7 +201,6 @@ public:
 
             XLibInitialized = true;
         }
-        drawMutex.unlock();
     }
 
     long windowEventMask() {
@@ -211,29 +211,34 @@ public:
     // Implements IWindow
     override void waitEventAndDispatch() nothrow @nogc
     {
-        // fprintf(stderr, "X11Window: waitEventAndDispatch()\n");
+        debug(logX11Window) printf("< waitEventAndDispatch\n");
         XEvent event;
         // Wait for events for current window
         XWindowEvent(_display, _windowId, windowEventMask(), &event);
         handleEvents(event, this);
+        debug(logX11Window) printf("> waitEventAndDispatch\n");
     }
 
     void eventLoop() nothrow @nogc
     {
-        // fprintf(stderr, "X11Window: eventLoop()\n");
+        debug(logX11Window) printf("< eventLoop\n");
         while (!terminated()) {
             waitEventAndDispatch();
         }
+        debug(logX11Window) printf("> eventLoop\n");
     }
 
     void emptyMergedBoxes() nothrow @nogc
     {
+        debug(logX11Window) printf("< emptyMergedBoxes\n");
         prevMergedDirtyRect = box2i(0,0,0,0);
         mergedDirtyRect = box2i(0,0,0,0);
+        debug(logX11Window) printf("> emptyMergedBoxes\n");
     }
 
     void sendRepaintIfUIDirty() nothrow @nogc
     {
+        debug(logX11Window) printf("< sendRepaintIfUIDirty\n");
         _listener.recomputeDirtyAreas();
         box2i dirtyRect = _listener.getDirtyRectangle();
         if (!dirtyRect.empty())
@@ -258,43 +263,58 @@ public:
                 evt.xexpose.width = 0;
                 evt.xexpose.height = 0;
 
+                XLockDisplay(_display);
                 XSendEvent(_display, _windowId, False, ExposureMask, &evt);
                 XFlush(_display);
+                XUnlockDisplay(_display);
             }
         }
+        debug(logX11Window) printf("> sendRepaintIfUIDirty\n");
+    }
+
+    void doAnimation()
+    {
+        uint now = getTimeMs();
+        double dt = (now - _lastMeasturedTimeInMs) * 0.001;
+        double time = (now - _timeAtCreationInMs) * 0.001; // hopefully no plug-in will be open more than 49 days
+        _lastMeasturedTimeInMs = now;
+        _listener.onAnimate(dt, time);
     }
 
     void timerLoop() nothrow @nogc
     {
-        debug(logX11Window) fprintf(stderr, "X11Window: timerLoop()\n");
+        debug(logX11Window) printf("< timerLoop\n");
         while(!terminated())
         {
-            uint now = getTimeMs();
-            double dt = (now - _lastMeasturedTimeInMs) * 0.001;
-            double time = (now - _timeAtCreationInMs) * 0.001; // hopefully no plug-in will be open more than 49 days
-            _lastMeasturedTimeInMs = now;
-            _listener.onAnimate(dt, time);
+            doAnimation();
+
+            _listener.recomputeDirtyAreas();
+            _dirtyAreasAreNotYetComputed = false;
+
             sendRepaintIfUIDirty();
             //Sleep for ~16.6 milliseconds (60 frames per second rendering)
             usleep(16666);
         }
+        debug(logX11Window) printf("> timerLoop\n");
     }
 
     override bool terminated()
     {
-        debug(logX11Window) fprintf(stderr, "X11Window: terminated()\n");
         return atomicLoad(_terminated);
     }
 
     override uint getTimeMs()
     {
+        debug(logX11Window) printf("< getTimeMs\n");
         static uint perform() {
+            debug(logX11Window) printf("< perform\n");
             import core.sys.posix.sys.time;
             timeval  tv;
             gettimeofday(&tv, null);
+            debug(logX11Window) printf("> perform\n");
             return cast(uint)((tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ) ;
         }
-
+        debug(logX11Window) printf("> getTimeMs\n");
         return assumeNothrowNoGC(&perform)();
     }
 
@@ -305,6 +325,7 @@ public:
 
     bool updateSizeIfNeeded(int newWidth, int newHeight)
     {
+        debug(logX11Window) printf("< updateSizeIfNeeded\n");
         if ( (newWidth != _width) || (newHeight != _height) )
         {
             if(_graphicImage !is null)
@@ -316,17 +337,19 @@ public:
 
             // Create a new data provider
             _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
+            debug(logX11Window) printf("> updateSizeIfNeeded\n");
             return true;
         }
-        else
+        else {
+            debug(logX11Window) printf("> updateSizeIfNeeded\n");
             return false;
+        }
     }
 }
 
 void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 {
-    debug(logX11Window) fprintf(stderr, "X11Window: handleEvents()\n");
-    theWindow.drawMutex.lock();
+    debug(logX11Window) printf("< handleEvents\n");
     with(theWindow)
     {
         
@@ -346,34 +369,27 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 
             case MapNotify:
             case Expose:
-                // Resize should trigger Expose event, so we don't need to handle it here
-                updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
+                XLockDisplay(_display);
 
-                if(_dirtyAreasAreNotYetComputed)
                 {
-                    _dirtyAreasAreNotYetComputed = false;
-                    _listener.recomputeDirtyAreas();
+                    // Resize should trigger Expose event, so we don't need to handle it here
+                    updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
                 }
-                _listener.recomputeDirtyAreas();
+                
+                box2i areaToRedraw = mergedDirtyRect;
+                box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
+                areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
 
-                _listener.onDraw(WindowPixelFormat.BGRA8);
-                XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                emptyMergedBoxes();
 
-
-
-                // box2i areaToRedraw = mergedDirtyRect;
-                // box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
-                // areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
-
-                // emptyMergedBoxes();
-
-                // if (!areaToRedraw.empty()) {
-                //     _listener.onDraw(WindowPixelFormat.BGRA8);
-                //     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
-                //     if(_graphicImage is null)
-                //         _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
-                //     XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
-                // }
+                if (!areaToRedraw.empty()) {
+                    _listener.onDraw(WindowPixelFormat.BGRA8);
+                    box2i[] areasToRedraw = (&areaToRedraw)[0..1];
+                    if(_graphicImage is null)
+                        _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                    XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                }
+                XUnlockDisplay(_display);
                 break;
 
             case ConfigureNotify:
@@ -476,7 +492,7 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                 break;
         }
     }
-    theWindow.drawMutex.unlock();
+    debug(logX11Window) printf("> handleEvents\n");
 }
 
 Key convertKeyFromX11(KeySym symbol)
