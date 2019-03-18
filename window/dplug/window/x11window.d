@@ -121,6 +121,7 @@ public:
         y = (DisplayHeight(_display, _screen) - _height) / 3;
         this._width = _width;
         this._height = _height;
+        _wfb = _listener.onResized(_width, _height);
         depth = 24;
 
         _windowId = XCreateSimpleWindow(_display, _parentWindowId, x, y, _width, _height, 0, 0, _black_pixel);
@@ -336,7 +337,7 @@ public:
             _wfb = _listener.onResized(_width, _height);
 
             // Create a new data provider
-            _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
+            // _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
             debug(logX11Window) printf("> updateSizeIfNeeded\n");
             return true;
         }
@@ -375,7 +376,7 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                     // Resize should trigger Expose event, so we don't need to handle it here
                     updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
                 }
-                
+
                 box2i areaToRedraw = mergedDirtyRect;
                 box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
                 areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
