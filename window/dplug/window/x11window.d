@@ -328,7 +328,7 @@ public:
             _wfb = _listener.onResized(_width, _height);
 
             // Create a new data provider
-            // _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
+            _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, newWidth, newHeight, 32, 0);
             debug(logX11Window) printf("> updateSizeIfNeeded\n");
             return true;
         }
@@ -366,26 +366,13 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
                     _dirtyAreasAreNotYetComputed = false;
                     _listener.recomputeDirtyAreas();
                 }
-
-                // box2i areaToRedraw = mergedDirtyRect;
-                // box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
-                // areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
-
-                // emptyMergedBoxes();
-
-                // if (!areaToRedraw.empty()) {
-                //     _listener.onDraw(WindowPixelFormat.BGRA8);
-                //     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
-                //     if(_graphicImage is null)
-                //         _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
-                //     XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
-                // }
-                _listener.onDraw(WindowPixelFormat.BGRA8);
+                
                 if(_graphicImage is null)
                     _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
-                // XLockDisplay(_display);
+                XLockDisplay(_display);
+                _listener.onDraw(WindowPixelFormat.BGRA8);
                 XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
-                // XUnlockDisplay(_display);
+                XUnlockDisplay(_display);
                 break;
 
             case ConfigureNotify:
