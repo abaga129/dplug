@@ -296,8 +296,7 @@ public:
             _dirtyAreasAreNotYetComputed = false;
 
             sendRepaintIfUIDirty();
-            //Sleep for ~16.6 milliseconds (60 frames per second rendering)
-            usleep(16666);
+            sleep(1 / 60);
         }
         debug(logX11Window) printf("> timerLoop\n");
     }
@@ -375,10 +374,11 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
             case Expose:
                 XLockDisplay(_display);
 
-                // {
-                //     // Resize should trigger Expose event, so we don't need to handle it here
-                //     updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
-                // }
+                if (_dirtyAreasAreNotYetComputed)
+                {
+                    _dirtyAreasAreNotYetComputed = false;
+                    _listener.recomputeDirtyAreas();
+                }
 
                 box2i areaToRedraw = mergedDirtyRect;
                 box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
