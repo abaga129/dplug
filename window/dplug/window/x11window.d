@@ -78,6 +78,7 @@ private:
     IWindowListener _listener;
 
     ImageRef!RGBA _wfb; // framebuffer reference
+    ubyte[4][] _bufferData;
     
     uint _timeAtCreationInMs;
     uint _lastMeasturedTimeInMs;
@@ -99,7 +100,7 @@ private:
     enum int XEMBED_MAPPED = (1 << 0);
 
 public:
-    this(void* parentWindow, /* void* transientWindowId,*/ IWindowListener listener, int _width, int _height)
+    this(void* parentWindow, /* void* transientWindowId,*/ IWindowListener listener, int width, int height)
     {
         debug(logX11Window) printf("X11Window: constructor\n");
         initializeXLib();
@@ -117,10 +118,10 @@ public:
             _parentWindowId = cast(Window)parentWindow;
         }
 
-        x = (DisplayWidth(_display, _screen) - _width) / 2;
-        y = (DisplayHeight(_display, _screen) - _height) / 3;
-        this._width = _width;
-        this._height = _height;
+        x = (DisplayWidth(_display, _screen) - width) / 2;
+        y = (DisplayHeight(_display, _screen) - height) / 3;
+        _width = width;
+        _height = height;
         _wfb = _listener.onResized(_width, _height);
         depth = 24;
 
@@ -372,10 +373,10 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
             case Expose:
                 XLockDisplay(_display);
 
-                {
-                    // Resize should trigger Expose event, so we don't need to handle it here
-                    updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
-                }
+                // {
+                //     // Resize should trigger Expose event, so we don't need to handle it here
+                //     updateSizeIfNeeded(event.xexpose.width, event.xexpose.height);
+                // }
 
                 box2i areaToRedraw = mergedDirtyRect;
                 box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
