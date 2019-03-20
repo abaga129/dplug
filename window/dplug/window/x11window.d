@@ -180,11 +180,13 @@ public:
 
     ~this()
     { 
+        XLockDisplay(_display);
+        XDestroyWindow(_display, _windowId);
+        XFlush(_display);
+        XUnlockDisplay(_display);
         _terminated = true;
         _timerLoop.join();
         _eventLoop.join();
-        XDestroyWindow(_display, _windowId);
-        XFlush(_display);
     }
 
     void initializeXLib() {
