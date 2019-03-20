@@ -45,7 +45,7 @@ import derelict.x11.extensions.Xrandr;
 import derelict.x11.extensions.randr;
 import core.stdc.stdio;
 
-debug = logX11Window;
+// debug = logX11Window;
 
 // This is an extension to X11, almost always should exist on modern systems
 // If it becomes a problem, version out its usage, it'll work just won't be as nice event wise
