@@ -247,31 +247,20 @@ public:
         box2i dirtyRect = _listener.getDirtyRectangle();
         if (!dirtyRect.empty())
         {
-            prevMergedDirtyRect = mergedDirtyRect;
-            mergedDirtyRect = mergedDirtyRect.expand(dirtyRect);
-            // If everything has been drawn by Expose event handler, send Expose event.
-            // Otherwise merge areas to be redrawn and postpone Expose event.
-            if (prevMergedDirtyRect.empty() && !mergedDirtyRect.empty()) {
-                int x = dirtyRect.min.x;
-                int y = dirtyRect.min.y;
-                int _width = dirtyRect.max.x - x;
-                int _height = dirtyRect.max.y - y;
+            XEvent evt;
+            memset(&evt, 0, XEvent.sizeof);
+            evt.type = Expose;
+            evt.xexpose.window = _windowId;
+            evt.xexpose.display = _display;
+            evt.xexpose.x = dirtyRect.min.x;
+            evt.xexpose.y = dirtyRect.min.y;
+            evt.xexpose.width = dirtyRect.width;
+            evt.xexpose.height = dirtyRect.height;
 
-                XEvent evt;
-                memset(&evt, 0, XEvent.sizeof);
-                evt.type = Expose;
-                evt.xexpose.window = _windowId;
-                evt.xexpose.display = _display;
-                evt.xexpose.x = 0;
-                evt.xexpose.y = 0;
-                evt.xexpose.width = 0;
-                evt.xexpose.height = 0;
-
-                XLockDisplay(_display);
-                XSendEvent(_display, _windowId, False, ExposureMask, &evt);
-                XFlush(_display);
-                XUnlockDisplay(_display);
-            }
+            XLockDisplay(_display);
+            XSendEvent(_display, _windowId, False, ExposureMask, &evt);
+            XFlush(_display);
+            XUnlockDisplay(_display);
         }
         debug(logX11Window) printf("> sendRepaintIfUIDirty\n");
     }
@@ -372,28 +361,31 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 
             case MapNotify:
             case Expose:
-                XLockDisplay(_display);
-
                 if (_dirtyAreasAreNotYetComputed)
                 {
                     _dirtyAreasAreNotYetComputed = false;
                     _listener.recomputeDirtyAreas();
                 }
 
-                box2i areaToRedraw = mergedDirtyRect;
-                box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
-                areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
+                // box2i areaToRedraw = mergedDirtyRect;
+                // box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
+                // areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
 
-                emptyMergedBoxes();
+                // emptyMergedBoxes();
 
-                if (!areaToRedraw.empty()) {
-                    _listener.onDraw(WindowPixelFormat.BGRA8);
-                    box2i[] areasToRedraw = (&areaToRedraw)[0..1];
-                    if(_graphicImage is null)
-                        _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
-                    XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
-                }
-                XUnlockDisplay(_display);
+                // if (!areaToRedraw.empty()) {
+                //     _listener.onDraw(WindowPixelFormat.BGRA8);
+                //     box2i[] areasToRedraw = (&areaToRedraw)[0..1];
+                //     if(_graphicImage is null)
+                //         _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                //     XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                // }
+                _listener.onDraw(WindowPixelFormat.BGRA8);
+                if(_graphicImage is null)
+                    _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                // XLockDisplay(_display);
+                XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                // XUnlockDisplay(_display);
                 break;
 
             case ConfigureNotify:
