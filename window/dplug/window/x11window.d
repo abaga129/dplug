@@ -79,10 +79,13 @@ private:
     bool _usingXEmbed = false;
 
     ImageRef!RGBA _wfb; // framebuffer reference
+    ubyte[4][] _bufferData;
     
     uint _timeAtCreationInMs;
     uint _lastMeasturedTimeInMs;
     bool _dirtyAreasAreNotYetComputed;
+
+    box2i prevMergedDirtyRect, mergedDirtyRect;
 
     int _width;
     int _height;
@@ -115,6 +118,7 @@ public:
         _lastMeasturedTimeInMs = _timeAtCreationInMs = getTimeMs();
 
         _dirtyAreasAreNotYetComputed = true;
+        _listener.recomputeDirtyAreas();
 
         _timerLoop = makeThread(&timerLoop);
         _timerLoop.start();
@@ -128,9 +132,6 @@ public:
         _terminated = true;
 
         XDestroyWindow(_display, _windowId);
-        _graphicImage.data = null;
-        XDestroyImage(_graphicImage);
-        XFreeGC(_display, _graphicGC);
         XFlush(_display);
 
         _timerLoop.join();
@@ -210,8 +211,8 @@ public:
         }
         else
         {
-            Atom wmDelete = XInternAtom(_display, "WM_DELETE_WINDOW", True);
-            XSetWMProtocols(_display, _windowId, &wmDelete, 1);
+            _closeAtom = XInternAtom(_display, "WM_DELETE_WINDOW".ptr, True);
+            XSetWMProtocols(_display, _windowId, &_closeAtom, 1);
         }
 
         XSelectInput(_display, _windowId, windowEventMask());
@@ -245,6 +246,12 @@ public:
         debug(logX11Window) printf("> eventLoop\n");
     }
 
+    void emptyMergedBoxes() nothrow @nogc
+    {
+        prevMergedDirtyRect = box2i(0,0,0,0);
+        mergedDirtyRect = box2i(0,0,0,0);
+    }
+
     void sendRepaintIfUIDirty() nothrow @nogc
     {
         debug(logX11Window) printf("< sendRepaintIfUIDirty\n");
@@ -268,6 +275,67 @@ public:
         debug(logX11Window) printf("> sendRepaintIfUIDirty\n");
     }
 
+    void swapBuffers(ImageRef!RGBA wfb, box2i[] areasToRedraw)
+    {
+        if (_dirtyAreasAreNotYetComputed)
+        {
+            _dirtyAreasAreNotYetComputed = false;
+            _listener.recomputeDirtyAreas();
+        }
+
+        if (_bufferData.length != wfb.w * wfb.h)
+        {
+             _bufferData = mallocSlice!(ubyte[4])(wfb.w * wfb.h);
+
+             if (_graphicImage !is null)
+            {
+                // X11 deallocates _bufferData for us (ugh...)
+                XDestroyImage(_graphicImage);
+            }
+
+            _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_bufferData.ptr, _width, _height, 32, 0);
+
+            size_t i;
+            foreach(y; 0 .. wfb.h)
+            {
+                RGBA[] scanLine = wfb.scanline(y);
+                foreach(x, ref c; scanLine)
+                {
+                    _bufferData[i][0] = c.b;
+                    _bufferData[i][1] = c.g;
+                    _bufferData[i][2] = c.r;
+                    _bufferData[i][3] = c.a;
+                    i++;
+                }
+            }
+        }
+        else
+        {
+            // PERF: there is no reason to do reordering here, since pixels can be requested to be BGRA8 in the onDraw call
+            foreach(box2i area; areasToRedraw)
+            {
+                foreach(y; area.min.y .. area.max.y)
+                {
+                    RGBA[] scanLine = wfb.scanline(y);
+
+                    size_t i = y * wfb.w;
+                    i += area.min.x;
+
+                    foreach(x, ref c; scanLine[area.min.x .. area.max.x])
+                    {
+                        _bufferData[i][0] = c.b;
+                        _bufferData[i][1] = c.g;
+                        _bufferData[i][2] = c.r;
+                        _bufferData[i][3] = c.a;
+                        i++;
+                    }
+                }
+            }
+        }
+
+        XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+    }
+
     void doAnimation()
     {
         uint now = getTimeMs();
@@ -282,6 +350,11 @@ public:
         debug(logX11Window) printf("< timerLoop\n");
         while(!terminated())
         {
+            if (_dirtyAreasAreNotYetComputed)
+            {
+                _dirtyAreasAreNotYetComputed = false;
+                _listener.recomputeDirtyAreas();
+            }
             doAnimation();
 
             _listener.recomputeDirtyAreas();
@@ -304,7 +377,7 @@ public:
         static uint perform() {
             debug(logX11Window) printf("< perform\n");
             import core.sys.posix.sys.time;
-            timeval  tv;
+            static timeval  tv;
             gettimeofday(&tv, null);
             debug(logX11Window) printf("> perform\n");
             return cast(uint)((tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ) ;
@@ -341,22 +414,38 @@ void handleEvents(ref XEvent event, X11Window theWindow) nothrow @nogc
 
             case MapNotify:
             case Expose:
+                XLockDisplay(_display);
                 if (_dirtyAreasAreNotYetComputed)
                 {
                     _dirtyAreasAreNotYetComputed = false;
                     _listener.recomputeDirtyAreas();
                 }
                 
-                if(_graphicImage is null)
-                    _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
+                // // if(_graphicImage is null)
+                // _graphicImage = XCreateImage(_display, _visual, depth, ZPixmap, 0, cast(char*)_wfb.pixels, _width, _height, 32, 0);
 
-                XLockDisplay(_display);
                 
-                _listener.onDraw(WindowPixelFormat.BGRA8);
-                XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
-                XFlush(_display);
+                // _listener.onDraw(WindowPixelFormat.BGRA8);
+                // XPutImage(_display, _windowId, _graphicGC, _graphicImage, 0, 0, 0, 0, cast(uint)_width, cast(uint)_height);
+                // XFlush(_display);
                 
+
+                box2i areaToRedraw = mergedDirtyRect;
+                box2i eventAreaToRedraw = box2i(event.xexpose.x, event.xexpose.y, event.xexpose.x + event.xexpose.width, event.xexpose.y + event.xexpose.height);
+                areaToRedraw = areaToRedraw.expand(eventAreaToRedraw);
+
+                emptyMergedBoxes();
+
+                
+
+                if (!areaToRedraw.empty()) {
+                    _listener.onDraw(WindowPixelFormat.RGBA8);
+                    box2i[] areasToRedraw = (&areaToRedraw)[0..1];
+                    swapBuffers(_wfb, areasToRedraw);
+                }
+
                 XUnlockDisplay(_display);
+
                 break;
 
             case ConfigureNotify:
