@@ -25,6 +25,7 @@
 module dplug.lv2.ttl;
 
 import core.stdc.stdio;
+import core.stdc.string;
 import std.conv;
 
 import dplug.core.nogc;
@@ -40,12 +41,6 @@ void GenerateManifestFromClient_templated(alias ClientClass)(generateManifestFro
                                                              const(char)[] binaryFileName,
                                                              const(char)[] buildDir)
 {
-    // Note: this function is called by D, so it reuses the runtime from dplug-build on Linux
-    // FUTURE: make this function nothrow @nogc, to avoid relying on dplug-build runtime
-
-    import core.runtime;
-    Runtime.initialize();
-
     ClientClass client = mallocNew!ClientClass();
     scope(exit) client.destroyFree();
 
@@ -250,55 +245,58 @@ void sprintPluginURI_IO(char* buf, size_t maxChars, string pluginHomepage, char[
     }
 }
 
-string lv2PluginCategory(PluginCategory category)
+const(char*) lv2PluginCategory(PluginCategory category) nothrow @nogc
 {
-    string lv2Category = ", lv2:";
+    string lv2Category;
+    
     with(PluginCategory)
     {
         switch(category)
         {
             case effectAnalysisAndMetering:
-                lv2Category ~= "AnalyserPlugin";
+                lv2Category = "AnalyserPlugin";
                 break;
             case effectDelay:
-                lv2Category ~= "DelayPlugin";
+                lv2Category = "DelayPlugin";
                 break;
             case effectDistortion:
-                lv2Category ~= "DistortionPlugin";
+                lv2Category = "DistortionPlugin";
                 break;
             case effectDynamics:
-                lv2Category ~= "DynamicsPlugin";
+                lv2Category = "DynamicsPlugin";
                 break;
             case effectEQ:
-                lv2Category ~= "EQPlugin";
+                lv2Category = "EQPlugin";
                 break;
             case effectImaging:
-                lv2Category ~= "SpatialPlugin";
+                lv2Category = "SpatialPlugin";
                 break;
             case effectModulation:
-                lv2Category ~= "ModulatorPlugin";
+                lv2Category = "ModulatorPlugin";
                 break;
             case effectPitch:
-                lv2Category ~= "PitchPlugin";
+                lv2Category = "PitchPlugin";
                 break;
             case effectReverb:
-                lv2Category ~= "ReverbPlugin";
+                lv2Category = "ReverbPlugin";
                 break;
             case effectOther:
-                lv2Category ~= "UtilityPlugin";
+                lv2Category = "UtilityPlugin";
                 break;
             case instrumentDrums:
             case instrumentSampler:
             case instrumentSynthesizer:
             case instrumentOther:
-                lv2Category ~= "InstrumentPlugin";
+                lv2Category = "InstrumentPlugin";
                 break;
             case invalid:
             default:
                 return "";
         }
     }
-    return lv2Category;
+    char* lv2CategoryPtr = cast(char*)malloc(256 * char.sizeof);
+    sprintf(lv2CategoryPtr, ", lv2:%s".ptr, lv2Category.ptr);
+    return lv2CategoryPtr;
 }
 
 /// escape a UTF-8 string for UTF-8 RDF
@@ -330,10 +328,12 @@ string escapeRDFString(const(char)[] s)
 
 /// Escape a UTF-8 string for UTF-8 IRI literal
 /// See_also: https://www.w3.org/TR/turtle/
-string escapeRDF_IRI(const(char)[] s)
+const(char)[] escapeRDF_IRI(const(char)[] s) nothrow @nogc
 {
     // We actually remove all characters, because it seems not all hosts properly decode escape sequences
-    string r = "<";
+    // string r = "<";
+    char* r = cast(char*)malloc(s.length * char.sizeof);
+    append(r, '<');
 
     foreach(char ch; s)
     {
@@ -352,11 +352,19 @@ string escapeRDF_IRI(const(char)[] s)
             case '\\':
                 break; // skip that character
             default:
-                r ~= ch;
+                append(r, ch);
         }
     }
-    r ~= ">";
-    return r;
+    append(r, '>');
+    return r[0..strlen(r)];
+}
+
+
+void append(char* s, char c) nothrow @nogc
+{
+        int len = cast(int)strlen(s);
+        s[len] = c;
+        s[len+1] = '\0';
 }
 
 const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, bool hasMIDIInput)

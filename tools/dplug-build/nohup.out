@@ -1,0 +1,112 @@
+
+(plank:5998): Gtk-WARNING **: 21:30:44.201: Locale not supported by C library.
+	Using the fallback 'C' locale.
+[93m[WARN 21:30:44.341165][0m [Preferences:192] '/usr/share/plank/themes/Default/dock.theme' is read-only!
+[93m[WARN 21:31:31.423512][0m [Theme:508] Currently selected gtk+ theme 'Adwaita-dark' does not provide a dock theme, fallback to the built-in defaults!
+[93m[WARN 21:31:33.707437][0m [Preferences:192] '/usr/share/plank/themes/Transparent/dock.theme' is read-only!
+[93m[WARN 21:31:33.707703][0m [Preferences:382] Missing key 'OuterStrokeColor' for group 'PlankTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.707751][0m [Preferences:382] Missing key 'FillStartColor' for group 'PlankTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.707831][0m [Preferences:382] Missing key 'FillEndColor' for group 'PlankTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.707876][0m [Preferences:382] Missing key 'InnerStrokeColor' for group 'PlankTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.707916][0m [Preferences:382] Missing key 'HorizPadding' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.707986][0m [Preferences:382] Missing key 'ItemPadding' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708027][0m [Preferences:382] Missing key 'IndicatorSize' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708067][0m [Preferences:382] Missing key 'IconShadowSize' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708106][0m [Preferences:382] Missing key 'UrgentBounceHeight' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708145][0m [Preferences:382] Missing key 'LaunchBounceHeight' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708183][0m [Preferences:382] Missing key 'FadeOpacity' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708222][0m [Preferences:382] Missing key 'ClickTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708261][0m [Preferences:382] Missing key 'UrgentBounceTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708300][0m [Preferences:382] Missing key 'LaunchBounceTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708339][0m [Preferences:382] Missing key 'ActiveTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708377][0m [Preferences:382] Missing key 'SlideTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708416][0m [Preferences:382] Missing key 'FadeTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708453][0m [Preferences:382] Missing key 'HideTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708493][0m [Preferences:382] Missing key 'GlowSize' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708533][0m [Preferences:382] Missing key 'GlowTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708613][0m [Preferences:382] Missing key 'GlowPulseTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708653][0m [Preferences:382] Missing key 'UrgentHueShift' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708693][0m [Preferences:382] Missing key 'ItemMoveTime' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:31:33.708731][0m [Preferences:382] Missing key 'CascadeHide' for group 'PlankDockTheme' in preferences file '/usr/share/plank/themes/Transparent/dock.theme' - using default value
+[93m[WARN 21:32:02.082420][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Firefox'
+[93m[WARN 21:32:02.082778][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Firefox'
+[93m[WARN 21:32:02.083291][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Firefox'
+[93m[WARN 21:32:02.085926][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Firefox'
+[93m[WARN 21:32:11.472735][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Visual Studio Code'
+[93m[WARN 21:32:11.475382][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Visual Studio Code'
+[93m[WARN 21:32:13.023446][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Terminator'
+[93m[WARN 21:32:13.026181][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Terminator'
+[93m[WARN 21:38:43.542143][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'REAPER'
+[93m[WARN 21:38:43.543477][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'REAPER'
+[91m[CRITICAL 21:38:48.201545][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:48.201653][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:48.701406][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:48.701543][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:48.850795][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:48.850964][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:49.468085][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:49.468190][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:49.668006][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:49.668199][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:50.318138][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:50.318336][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:50.751262][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:50.751456][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:51.618179][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:51.618426][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:51.901262][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:38:51.# Locale not supported by C library.
+# 	Using the fallback 'C' locale.
+# _g_io_module_get_default: Found default implementation gvfs (GDaemonVfs) for ‘gio-vfs’
+# Error constructing proxy for org.gnome.Terminal:/org/gnome/Terminal/Factory0: Error calling StartServiceByName for org.gnome.Terminal: Timeout was reached
+
+(terminator:6091): Gtk-WARNING **: 00:14:25.408: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(firefox:6909): Gtk-WARNING **: 00:20:30.411: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(firefox:8092): Gtk-WARNING **: 00:29:19.368: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:8163): Gtk-WARNING **: 00:29:19.775: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:8233): Gtk-WARNING **: 00:29:20.125: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:8312): Gtk-WARNING **: 00:29:20.761: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(terminator:8375): Gtk-WARNING **: 00:29:37.125: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:9458): Gtk-WARNING **: 00:31:09.899: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:9552): Gtk-WARNING **: 00:31:23.542: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:11772): Gtk-WARNING **: 00:33:21.470: Locale not supported by C library.
+	Using the fallback 'C' locale.
+
+(/usr/lib/firefox/firefox:21403): Gtk-WARNING **: 00:36:14.724: Locale not supported by C library.
+	Using the fallback 'C' locale.
+901399][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:01.501474][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:01.501621][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:01.683894][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:01.684125][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:02.617456][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:02.617654][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:02.783687][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:02.784064][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:03.967644][0m [DockWindow:297] Retry #1 update_size_and_position() to force requested values!
+[91m[CRITICAL 21:39:03.967866][0m [DockWindow:297] Retry #2 update_size_and_position() to force requested values!
+[93m[WARN 21:40:27.655134][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Feed The Beast'
+[93m[WARN 21:40:27.658177][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Feed The Beast'
+[93m[WARN 21:43:20.761994][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Discord'
+[93m[WARN 21:43:20.762160][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Discord'
+[93m[WARN 00:30:00.102310][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Grub Customizer'
+[93m[WARN 00:30:00.102409][0m [PositionManager:683] Without a draw_value there is trouble ahead for 'Grub Customizer'
+[93m[WARN 00:38:18.163887][0m [AbstractMain:42] Caught signal (15), exiting
