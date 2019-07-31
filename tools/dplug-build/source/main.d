@@ -1095,7 +1095,10 @@ void generateWindowsInstaller(string outputDir,
     }
 
     content ~= "!define MUI_ABORTWARNING\n";
-    content ~= "!define MUI_ICON \"" ~ plugin.iconPathWindows ~ "\"\n";
+    if (plugin.iconPathWindows)
+    {
+        content ~= "!define MUI_ICON \"" ~ plugin.iconPathWindows ~ "\"\n";
+    }
     content ~= "!insertmacro MUI_PAGE_LICENSE \"" ~ licensePath ~ "\"\n";
     content ~= "!insertmacro MUI_PAGE_COMPONENTS\n";
     content ~= "!insertmacro MUI_LANGUAGE \"English\"\n\n";
