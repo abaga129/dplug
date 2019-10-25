@@ -702,7 +702,6 @@ private:
                     int numOutputs = pOutputArr.numChannels;
                     chooseIOArrangement(numInputs, numOutputs);
                     sendResetMessage();
-                    return 0; // MAYDO: this looks very wrong
                 }
                 return 1;
             }
