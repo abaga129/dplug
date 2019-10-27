@@ -71,6 +71,15 @@ nothrow:
         return io.releaseData();
     }
 
+    override BusInfo[] buildBusInfo()
+    {
+        auto bus = makeVec!BusInfo();
+        bus ~= BusInfo(busDirectionInput, 2, "Input Bus");
+        bus ~= BusInfo(busDirectionOutput, 2, "Output Bus");
+        bus ~= BusInfo(busDirectionAux, 2, "Sidechain");
+        return bus.releaseData();
+    }
+
     // This override is optional, the default implementation will
     // have one default preset.
     override Preset[] buildPresets() nothrow @nogc

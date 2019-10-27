@@ -32,6 +32,7 @@ import dplug.client.preset;
 import dplug.client.midi;
 import dplug.client.graphics;
 import dplug.client.daw;
+import dplug.client.bus;
 
 
 /// A plugin client can send commands to the host.
@@ -180,6 +181,9 @@ nothrow:
         // Create legal I/O combinations
         _legalIOs = buildLegalIO();
 
+        // Create bus info
+        _busInfo = buildBusInfo();
+
         // Create parameters.
         _params = buildParameters();
 
@@ -239,6 +243,7 @@ nothrow:
             p.destroyFree();
         _params.freeSlice();
         _legalIOs.freeSlice();
+        _busInfo.freeSlice();
     }
 
     final int maxInputs() pure const nothrow @nogc
@@ -261,6 +266,11 @@ nothrow:
     final LegalIO[] legalIOs() nothrow @nogc
     {
         return _legalIOs;
+    }
+
+    final BusInfo[] busInfo() nothrow @nogc
+    {
+        return _busInfo;
     }
 
     /// Returns: true if the following I/O combination is a legal one.
@@ -722,6 +732,8 @@ protected:
     /// The returned slice must be allocated with `malloc`/`mallocSlice`.
     abstract LegalIO[] buildLegalIO();
 
+    abstract BusInfo[] buildBusInfo();
+
     IGraphics _graphics;
 
     // Used as a flag that _graphics can be used (by audio thread or for destruction)
@@ -739,6 +751,8 @@ private:
     PresetBank _presetBank;
 
     LegalIO[] _legalIOs;
+
+    BusInfo[] _busInfo;
 
     int _maxInputs, _maxOutputs; // maximum number of input/outputs
 

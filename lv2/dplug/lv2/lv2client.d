@@ -46,7 +46,8 @@ import dplug.client.client,
        dplug.client.preset,
        dplug.client.graphics,
        dplug.client.midi,
-       dplug.client.params;
+       dplug.client.params,
+       dplug.client.bus;
 
 import dplug.lv2.lv2,
        dplug.lv2.midi,
@@ -130,6 +131,7 @@ nothrow:
         _mappedURIs.initialize(uridMap);
 
         LegalIO selectedIO = _client.legalIOs()[_legalIOIndex];
+        BusInfo[] busInfos = _client.busInfo();
 
         _numInputs = selectedIO.numInputChannels;
         _numOutputs = selectedIO.numOutputChannels;

@@ -34,6 +34,7 @@ import dplug.core.nogc;
 import dplug.client.client;
 import dplug.client.params;
 import dplug.client.daw;
+import dplug.client.bus;
 
 int GenerateManifestFromClient_templated(alias ClientClass)(char[] outputBuffer,
                                                             const(char)[] binaryFileName) nothrow @nogc
@@ -75,39 +76,37 @@ int GenerateManifestFromClient_templated(alias ClientClass)(char[] outputBuffer,
         uriGUI = stringIDup(uriBuf.ptr); // TODO leak here
     }
 
-    foreach(legalIO; legalIOs)
+    // Make an URI for this I/O configuration
+    // sprintPluginURI_IO_short(uriBuf.ptr, 256, legalIO);
+    snprintf(uriBuf.ptr, 256, "vendor:plugin" );
+    string uriIO = stringIDup(uriBuf.ptr); // TODO leak here
+
+    strcat(manifest.ptr, uriIO.ptr);
+    strcat(manifest.ptr, "\n".ptr);
+    strcat(manifest.ptr, "    a lv2:Plugin");
+    strcat(manifest.ptr, lv2PluginCategory(client.pluginCategory).ptr);
+    strcat(manifest.ptr, " ;\n".ptr);
+    strcat(manifest.ptr, "    lv2:binary ".ptr);
+    strcat(manifest.ptr, escapeRDF_IRI(binaryFileName).ptr);
+    strcat(manifest.ptr, " ;\n".ptr);
+    strcat(manifest.ptr, "    doap:name ".ptr);
+    strcat(manifest.ptr, escapeRDFString(client.pluginName).ptr);
+    strcat(manifest.ptr, " ;\n".ptr);
+    strcat(manifest.ptr, "    doap:maintainer [ foaf:name ".ptr);
+    strcat(manifest.ptr, escapeRDFString(client.vendorName).ptr);
+    strcat(manifest.ptr, " ] ;\n".ptr);
+    strcat(manifest.ptr, "    lv2:requiredFeature opts:options ,\n".ptr);
+    strcat(manifest.ptr, "                        urid:map ;\n".ptr);
+
+    // We do not provide such an interface
+    //manifest ~= "    lv2:extensionData <" ~ LV2_OPTIONS__interface ~ "> ; \n";
+
+    if(client.hasGUI)
     {
-        // Make an URI for this I/O configuration
-        sprintPluginURI_IO_short(uriBuf.ptr, 256, legalIO);
-        string uriIO = stringIDup(uriBuf.ptr); // TODO leak here
-
-        strcat(manifest.ptr, uriIO.ptr);
-        strcat(manifest.ptr, "\n".ptr);
-        strcat(manifest.ptr, "    a lv2:Plugin");
-        strcat(manifest.ptr, lv2PluginCategory(client.pluginCategory).ptr);
-        strcat(manifest.ptr, " ;\n".ptr);
-        strcat(manifest.ptr, "    lv2:binary ".ptr);
-        strcat(manifest.ptr, escapeRDF_IRI(binaryFileName).ptr);
-        strcat(manifest.ptr, " ;\n".ptr);
-        strcat(manifest.ptr, "    doap:name ".ptr);
-        strcat(manifest.ptr, escapeRDFString(client.pluginName).ptr);
-        strcat(manifest.ptr, " ;\n".ptr);
-        strcat(manifest.ptr, "    doap:maintainer [ foaf:name ".ptr);
-        strcat(manifest.ptr, escapeRDFString(client.vendorName).ptr);
-        strcat(manifest.ptr, " ] ;\n".ptr);
-        strcat(manifest.ptr, "    lv2:requiredFeature opts:options ,\n".ptr);
-        strcat(manifest.ptr, "                        urid:map ;\n".ptr);
-
-        // We do not provide such an interface
-        //manifest ~= "    lv2:extensionData <" ~ LV2_OPTIONS__interface ~ "> ; \n";
-
-        if(client.hasGUI)
-        {
-            strcat(manifest.ptr, "    ui:ui vendor:ui;\n".ptr);
-        }
-
-        strcat(manifest.ptr, buildParamPortConfiguration(client.params(), legalIO, client.receivesMIDI).ptr);
+        strcat(manifest.ptr, "    ui:ui vendor:ui;\n".ptr);
     }
+
+    strcat(manifest.ptr, buildParamPortConfiguration(client.params(), client.busInfo(), client.receivesMIDI).ptr);
 
     // add presets information
 
@@ -150,17 +149,9 @@ int GenerateManifestFromClient_templated(alias ClientClass)(char[] outputBuffer,
 
         // Each preset applies to every plugin I/O configuration
         strcat(manifest.ptr, "        lv2:appliesTo ".ptr);
-        foreach(size_t n, legalIO; legalIOs)
-        {
-            // Make an URI for this I/O configuration
-            sprintPluginURI_IO_short(uriBuf.ptr, 256, legalIO);
-            string uriIO = stringIDup(uriBuf.ptr); // TODO leak here
-            strcat(manifest.ptr, uriIO.ptr);
-            if (n + 1 == legalIOs.length)
-                strcat(manifest.ptr, " . \n".ptr);
-            else
-                strcat(manifest.ptr, " , ".ptr);
-        }
+        snprintf(uriBuf.ptr, 256, "vendor:plugin . \n");
+        string uriIODup = stringIDup(uriBuf.ptr); // TODO leak here
+        strcat(manifest.ptr, uriIODup.ptr);
     }
 
     // describe UI
@@ -391,7 +382,7 @@ const(char)[] escapeRDF_IRI(const(char)[] s) nothrow @nogc
     return escapedRDF_IRI[0..index];
 }
 
-const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, bool hasMIDIInput) nothrow @nogc
+const(char)[] buildParamPortConfiguration(Parameter[] params, BusInfo[] busInfo, bool hasMIDIInput) nothrow @nogc
 {
     import std.conv: to;
     import std.uni: toLower;
@@ -435,13 +426,13 @@ const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, b
             strcat(paramString.ptr, "        lv2:portProperty <http://kxstudio.sf.net/ns/lv2ext/props#NonAutomable> ;\n".ptr);
         }
         strcat(paramString.ptr, "    ]".ptr);
-        if(index < params.length - 1 || legalIO.numInputChannels > 0 || legalIO.numOutputChannels > 0)
+        if(index < params.length - 1 || busInfo[0].numChannels > 0 || busInfo[1].numChannels > 0)
             strcat(paramString.ptr, " ,\n".ptr);
         else
             strcat(paramString.ptr, " . \n".ptr);
     }
 
-    foreach(input; 0..legalIO.numInputChannels)
+    foreach(input; 0..busInfo[0].numChannels)
     {
         char[] paramsLengthPlusInput = cast(char[])malloc(char.sizeof * 10)[0..10];
         snprintf(paramsLengthPlusInput.ptr, 10, "%d", params.length + input);
@@ -460,16 +451,16 @@ const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, b
         strcat(paramString.ptr, inputString.ptr);
         strcat(paramString.ptr, "\" ;\n".ptr);
         strcat(paramString.ptr, "    ]".ptr);
-        if(input < legalIO.numInputChannels - 1 || legalIO.numOutputChannels > 0)
+        if(input < busInfo[0].numChannels - 1 || busInfo[1].numChannels > 0)
             strcat(paramString.ptr, " , ".ptr);
         else
             strcat(paramString.ptr, " . \n".ptr);
     }
 
-    foreach(output; 0..legalIO.numOutputChannels)
+    foreach(output; 0..busInfo[1].numChannels)
     {
         char[] indexString = cast(char[])malloc(char.sizeof * 256)[0..256];
-        sprintf(indexString.ptr, "%d", params.length + legalIO.numInputChannels + output);
+        sprintf(indexString.ptr, "%d", params.length + busInfo[0].numChannels + output);
         char[] outputString = cast(char[])malloc(char.sizeof * 256)[0..256];
         sprintf(outputString.ptr, "%d", output);
         
@@ -485,7 +476,34 @@ const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, b
         strcat(paramString.ptr, outputString.ptr);
         strcat(paramString.ptr, "\" ;\n".ptr);
         strcat(paramString.ptr, "    ]".ptr);
-        if(output < legalIO.numOutputChannels - 1 || hasMIDIInput)
+        if(output < busInfo[1].numChannels - 1 || hasMIDIInput)
+            strcat(paramString.ptr, " , ".ptr);
+        else
+            strcat(paramString.ptr, " . \n".ptr);
+    }
+
+    foreach(aux; 0..busInfo[2].numChannels)
+    {
+        char[] indexString = cast(char[])malloc(char.sizeof * 256)[0..256];
+        sprintf(indexString.ptr, "%d", params.length + busInfo[0].numChannels + busInfo[1].numChannels + aux);
+        char[] auxString = cast(char[])malloc(char.sizeof * 256)[0..256];
+        sprintf(auxString.ptr, "%d", aux);
+        
+        strcat(paramString.ptr, "    [ \n".ptr);
+        strcat(paramString.ptr, "        a lv2:AudioPort , lv2:InputPort ;\n".ptr);
+        strcat(paramString.ptr, "        lv2:index ".ptr);
+        strcat(paramString.ptr, indexString.ptr);
+        strcat(paramString.ptr, ";\n".ptr);
+        strcat(paramString.ptr, "        lv2:portProperty lv2:isSideChain.ptr");
+        strcat(paramString.ptr, ";\n".ptr);
+        strcat(paramString.ptr, "        lv2:symbol \"Aux_".ptr);
+        strcat(paramString.ptr, auxString.ptr);
+        strcat(paramString.ptr, "\" ;\n".ptr);
+        strcat(paramString.ptr, "        lv2:name \"Aux".ptr);
+        strcat(paramString.ptr, auxString.ptr);
+        strcat(paramString.ptr, "\" ;\n".ptr);
+        strcat(paramString.ptr, "    ]".ptr);
+        if(aux < busInfo[2].numChannels - 1 || hasMIDIInput)
             strcat(paramString.ptr, " , ".ptr);
         else
             strcat(paramString.ptr, " . \n".ptr);
@@ -499,7 +517,7 @@ const(char)[] buildParamPortConfiguration(Parameter[] params, LegalIO legalIO, b
         strcat(paramString.ptr, "        atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent> ;\n".ptr);
 
     char[] indexString = cast(char[])malloc(char.sizeof * 256)[0..256];
-    sprintf(indexString.ptr, "%d", params.length + legalIO.numInputChannels + legalIO.numOutputChannels);
+    sprintf(indexString.ptr, "%d", params.length + busInfo[0].numChannels + busInfo[1].numChannels);
 
     strcat(paramString.ptr, "        atom:supports <http://lv2plug.in/ns/ext/time#Position> ;\n".ptr);
     strcat(paramString.ptr, "        lv2:designation lv2:control ;\n".ptr);
