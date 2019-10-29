@@ -276,6 +276,33 @@ private:
         _processingIOFromOpcodeThread = bestProcessingIO;
     }
 
+    version(expirementalVSTSpeakerArrangement)
+    {
+        // Choose the Legal IO that is preferred by the plugin creator. For now we are
+        // using the last legal IO in the list for simplicity.  The author needs to be aware of
+        // this quirk to avoid getting unexpected IO arrangements.
+        final void choosePreferredIOArrangment() nothrow @nogc
+        {
+            auto legalIOs = _client.legalIOs();
+            if ( legalIOs.length > 0 )
+            {
+                auto preferredLegalIO = legalIOs[$-1];
+                _preferredNumInputs = preferredLegalIO.numInputChannels;
+                _preferredNumOutputs = preferredLegalIO.numOutputChannels;
+            }
+            else
+            {
+                _preferredNumInputs = 0;
+                _preferredNumOutputs = 0;
+            }
+        }
+
+        final bool isPeferredIOArrangement(int numInputs, int numOutputs) nothrow @nogc
+        {
+            return numInputs == _preferredNumInputs && numOutputs == _preferredNumOutputs;
+        }
+    }
+
     // Same data, but on the audio thread point of view.
     IO _hostIOFromAudioThread;
     IO _processingIOFromAudioThread;
@@ -293,6 +320,17 @@ private:
     // stores the last asked preset/bank chunk
     ubyte[] _lastPresetChunk = null;
     ubyte[] _lastBankChunk = null;
+
+    version(expirementalVSTSpeakerArrangement)
+    {
+        // flags to see if speaker arrangment opcodes have been called
+        bool _getSpeakerArrangementCalled;
+        bool _setSpeakerArrangementCalled;
+
+        // preferred number of channels
+        int _preferredNumInputs = 0;
+        int _preferredNumOutputs = 0;
+    }
 
     // Inter-locked message queue from opcode thread to audio thread
     LockedQueue!AudioThreadMessage _messageQueue;
@@ -694,14 +732,40 @@ private:
 
             case effSetSpeakerArrangement: // opcode 42
             {
+                scope(exit) _setSpeakerArrangementCalled = true;
+
                 VstSpeakerArrangement* pInputArr = cast(VstSpeakerArrangement*) value;
                 VstSpeakerArrangement* pOutputArr = cast(VstSpeakerArrangement*) ptr;
                 if (pInputArr !is null && pOutputArr !is null )
                 {
                     int numInputs = pInputArr.numChannels;
                     int numOutputs = pOutputArr.numChannels;
-                    chooseIOArrangement(numInputs, numOutputs);
-                    sendResetMessage();
+                    version (expirementalVSTSpeakerArrangement)
+                    {
+                        if (_getSpeakerArrangementCalled || _setSpeakerArrangementCalled)
+                        {
+                            chooseIOArrangement(numInputs, numOutputs);
+                            sendResetMessage();
+                        }
+                        else
+                        {
+                            bool isPreferredIOArrangement = isPeferredIOArrangement(numInputs, numOutputs);
+                            if (!isPreferredIOArrangement)
+                            {
+                                return 0;
+                            }
+                            else
+                            {
+                                chooseIOArrangement(numInputs, numOutputs);
+                                sendResetMessage();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        chooseIOArrangement(numInputs, numOutputs);
+                        sendResetMessage();
+                    }
                 }
                 return 1;
             }
@@ -795,6 +859,23 @@ private:
 
             case effGetVstVersion: // opcode 58
                 return 2400; // version 2.4
+
+version(expirementalVSTSpeakerArrangement)
+{
+            case effGetSpeakerArrangement: // opcode 76
+            {
+                scope (exit) _getSpeakerArrangementCalled = true;
+                VstSpeakerArrangement* pInputArr = cast(VstSpeakerArrangement*) value;
+                VstSpeakerArrangement* pOutputArr = cast(VstSpeakerArrangement*) ptr;
+                if (pInputArr !is null && pOutputArr !is null )
+                {
+                    choosePreferredIOArrangment();
+                    pInputArr.numChannels = _preferredNumInputs;
+                    pOutputArr.numChannels = _preferredNumOutputs;
+                }
+                return 1;
+            }
+}
 
         default:
             return 0; // unknown opcode, should never happen
