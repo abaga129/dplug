@@ -647,6 +647,18 @@ nothrow:
         return false;
     }
 
+    /// Set the mouse cursor for this UIElement. UIElements can call this to change the cursor
+    final void setMouseCursor(MouseCursor mouseCursor)
+    {
+        context.mouseCursor = mouseCursor;
+    }
+
+    /// Get the current state of the mouse cursor for this element
+    // MouseCursor getMouseCursor()
+    // {
+    //     return _mouseCursor;
+    // }
+
     // To be called at top-level periodically.
     void animate(double dt, double time)
     {
@@ -881,6 +893,9 @@ private:
 
     /// Sorted children in Z-lexical-order (sorted by Z, or else increasing index in _children).
     Vec!UIElement _zOrderedChildren;
+
+    /// Current mouse cursor set for this UIElement, the top level element in z-order will take priority.
+    MouseCursor _mouseCursor;
 
     // Sort children in ascending z-order
     // Input: unsorted _children

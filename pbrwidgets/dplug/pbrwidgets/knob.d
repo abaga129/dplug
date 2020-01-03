@@ -368,6 +368,11 @@ nothrow:
         setDirtyWhole();
     }
 
+    override void onMouseEnter()
+    {
+        setMouseCursor(MouseCursor.drag);
+    }
+
     override void onMouseExit()
     {
         _shouldBeHighlighted = false;

@@ -298,6 +298,11 @@ nothrow:
         {
             outer.animate(dt, time);
         }
+
+        override MouseCursor getMouseCursor()
+        {
+            return outer.getMouseCursor();
+        }
     }
 
     /// Tune this to tune the trade-off between light quality and speed.
@@ -609,6 +614,11 @@ protected:
         _renderedBuffer = cast(ubyte*) alignedRealloc(_renderedBuffer, sizeNeeded, 16);
 
         return toImageRef(_renderedBuffer);
+    }
+
+    MouseCursor getMouseCursor()
+    {
+        return _uiContext.mouseCursor;
     }
 
     /// Draw the Raw layer of `UIElement` widgets

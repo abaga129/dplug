@@ -41,6 +41,9 @@ nothrow:
     /// Currently dragged element.
     UIElement dragged = null;
 
+    /// Currently set mouse cursor.
+    MouseCursor mouseCursor = MouseCursor.pointer;
+
     version(legacyMouseOver) {}
     else
     {

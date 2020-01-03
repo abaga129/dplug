@@ -322,6 +322,7 @@ private:
 
             doAnimation();
             sendRepaintIfUIDirty();
+            setCursor();
 
             if (atomicLoad(_terminateThreads))
                 break;
@@ -346,6 +347,12 @@ private:
         _animationMutex.lock();
         _listener.onAnimate(dt, time);
         _animationMutex.unlock();
+    }
+
+    void setCursor()
+    {
+        MouseCursor cursor = _listener.getMouseCursor();
+        assert(false, "Method not implemented");
     }
 
     // A message that says "animate the UI"

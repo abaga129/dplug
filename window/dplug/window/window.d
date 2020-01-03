@@ -88,6 +88,18 @@ enum WindowUsage
     host
 }
 
+/// 
+enum MouseCursor
+{
+    pointer,
+    linkSelect,
+    move,
+    drag,
+    verticalResize,
+    horizontalResize,
+    hidden
+}
+
 /// Giving commands to a window.
 interface IWindow
 {
@@ -206,6 +218,8 @@ nothrow @nogc:
     /// `time` must refer to the window creation time.
     /// `dt` and `time` are expressed in seconds (not milliseconds).
     void onAnimate(double dt, double time);
+
+    MouseCursor getMouseCursor();
 }
 
 /// Various backends for windowing.
