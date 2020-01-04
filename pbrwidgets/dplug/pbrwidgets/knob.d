@@ -346,6 +346,8 @@ nothrow:
 
         if (newParamValue != oldParamValue)
             _param.setFromGUINormalized(newParamValue);
+
+        setMouseCursor(MouseCursor.drag);
     }
 
     // For lazy updates
@@ -357,6 +359,7 @@ nothrow:
 
     override void onStopDrag()
     {
+        setMouseCursor(MouseCursor.pointer);
         _param.endParamEdit();
         clearCrosspoints();
         setDirtyWhole();
@@ -375,6 +378,7 @@ nothrow:
 
     override void onMouseExit()
     {
+        setMouseCursor(MouseCursor.pointer);
         _shouldBeHighlighted = false;
         setDirtyWhole();
     }

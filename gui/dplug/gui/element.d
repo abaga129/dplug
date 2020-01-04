@@ -503,8 +503,9 @@ nothrow:
             }
             else
             {
-                if (_mouseOver)
+                if (_mouseOver) {
                     onMouseExit();
+                }
                 _mouseOver = false;
             }
         }

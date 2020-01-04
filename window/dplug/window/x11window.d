@@ -224,6 +224,9 @@ private:
     int _lastMouseX;
     int _lastMouseY;
 
+    /// Last cursor font used
+    int _lastX11CursorFont;
+
     /// Prevent onAnimate going on at the same time than input events.
     /// The only calls that can be concurrent are onAnimate and onDraw
     UncheckedMutex _animationMutex;   
@@ -352,7 +355,15 @@ private:
     void setCursor()
     {
         MouseCursor cursor = _listener.getMouseCursor();
-        assert(false, "Method not implemented");
+        immutable int x11CursorFont = convertCursorToX11Byte(cursor);
+        if(_lastX11CursorFont != x11CursorFont)
+        {
+            lockX11();
+            auto c = XCreateFontCursor(_display, x11CursorFont); 
+            XDefineCursor(_display, _windowID, c);
+            unlockX11();
+        }
+        _lastX11CursorFont = x11CursorFont;
     }
 
     // A message that says "animate the UI"
@@ -700,6 +711,27 @@ debug(logX11Window)
         unlockX11();
         printf("Error = %s\n", buf.ptr);
         assert(false);
+    }
+}
+
+int convertCursorToX11Byte(MouseCursor cursor)
+{
+    switch(cursor)
+    {
+        
+        case cursor.linkSelect:
+            return 60;
+        case cursor.drag:
+            return 58;
+        case cursor.move:
+            return 34;
+        case cursor.horizontalResize:
+            return 116;
+        case cursor.verticalResize:
+            return 108;
+        case cursor.pointer:
+        default:
+            return 2;
     }
 }
 
