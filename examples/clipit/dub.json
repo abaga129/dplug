@@ -3,6 +3,8 @@
 
     "name": "clipit",
 
+    "versions": ["expirementalVSTSpeakerArrangement"],
+
     "license": "public domain",
     "importPaths": [ "." ],
     "sourcePaths": [ "." ],
