@@ -26,3 +26,4 @@ builds
 repro*.sh
 *.sh
 .vscode
+.idea/
