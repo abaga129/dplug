@@ -21,15 +21,10 @@ enum : int
 {
     paramInputGain,
     paramOutputGain,
-    paramDamp,
+    paramDamp, //start of faustReverb parameters
     paramRoomSize,
     paramStereoSpread,
     paramWet
-    // paramStrength, // start of faust controls
-    // paramThreshold,
-    // paramAttack,
-    // paramRelease,
-    // paramKnee
 }
 
 
@@ -67,6 +62,7 @@ nothrow:
     // in the same order as the parameter enum.
     override Parameter[] buildParameters()
     {
+        // Add parameters that are not related to the faust dsp module
         auto params = makeVec!Parameter();
         params ~= mallocNew!LinearFloatParameter(paramInputGain, "input gain", "dB", -12.0f, 12.0f, 0.0f) ;
         params ~= mallocNew!LinearFloatParameter(paramOutputGain, "output gain", "db", -12.0f, 12.0f, 0.0f) ;

@@ -6,7 +6,7 @@ This example uses the faust compiler to generate D code which can then be used f
 
 1. Install the faust compiler for your system. [Faust Compiler and Libfaust](https://faust.grame.fr/downloads/)
 2. Run the following command to generate the D code.
-`faust -lang dlang -a minimal.d reverb.dsp -o reverb.d -cn FaustReverb`
+`faust -vec -lang dlang -a minimal.d reverb.dsp -o reverb.d -cn FaustReverb`
 3. Build the plugin using dplug-build
 `dplug-build -c VST --compiler dmd -b debug`
 
