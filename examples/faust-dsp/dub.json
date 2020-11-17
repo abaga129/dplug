@@ -1,0 +1,61 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Pure-D/code-d/master/json-validation/dub.schema.json",
+
+    "name": "faust-dsp",
+
+    "versions": ["expirementalVSTSpeakerArrangement"],
+
+    "license": "public domain",
+    "importPaths": [ "." ],
+    "sourcePaths": [ "." ],
+    "stringImportPaths": ["gfx", "."],
+
+    "copyright": "none",
+
+    "dflags-linux-dmd": ["-defaultlib=libphobos2.a"],
+    "dflags-osx-ldc": ["-static"],
+    "dflags-linux-ldc": ["-link-defaultlib-shared=false", "-fvisibility=hidden"],
+    "dflags-windows-ldc": ["-mscrtlib=libcmt"],
+
+    "comment-WARNING-READ-THIS-IS-IMPORTANT": [
+        "    When making your own plug-in you have to CHANGE THESE DEPENDENCY    ",
+        "    SPECIFICATIONS below from path-based to ~>MAJOR.MINOR               ",
+        "      Example: ~>7.0                                                    ",
+        "    See also the DUB documentation:                                     ",
+        "         https://code.dlang.org/package-format?lang=json#version-specs  "],
+    "dependencies":
+    {
+        "dplug:dsp": { "path": "../.." },
+        "dplug:vst": { "path": "../.." },
+        "dplug:lv2": { "path": "../.."},
+        "dplug:au": { "path": "../.." },
+        "dplug:vst3": { "path": "../.." }
+    },
+
+    "configurations": [
+        {
+            "name": "VST",
+            "versions": ["VST"],
+            "targetType": "dynamicLibrary",
+            "lflags-osx-ldc": [ "-exported_symbols_list", "module-vst.lst", "-dead_strip" ]
+        },
+        {
+            "name": "AU",
+            "versions": ["AU"],
+            "targetType": "dynamicLibrary",
+            "lflags-osx-ldc": [ "-exported_symbols_list", "module-au.lst", "-dead_strip" ]
+        },
+        {
+            "name": "VST3",
+            "versions": ["VST3"],
+            "targetType": "dynamicLibrary",
+            "lflags-osx-ldc": [ "-exported_symbols_list", "module-vst3.lst", "-dead_strip" ]
+        },
+        {
+            "name": "LV2",
+            "versions": ["LV2"],
+            "targetType": "dynamicLibrary",
+            "lflags-osx-ldc": [ "-exported_symbols_list", "module-lv2.lst", "-dead_strip" ]
+        }
+    ]
+}

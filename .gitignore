@@ -26,3 +26,5 @@ builds
 repro*.sh
 *.sh
 .vscode
+.idea/
+examples/faust-dsp/reverb.d
